@@ -5,7 +5,6 @@
 
 #include "BesVisClient/BesClient.h"
 #include "BesVisClient/BesAboutHelp.h"
-#include "BesVisClient/BesMdcPalette.h"
 #include "BesVisLib/BesVisDisplay.h"
 #include "BesVisLib/BesCursor.h"
 #include <iostream>
@@ -54,12 +53,10 @@
 #include <TVirtualGL.h>
 #include <TVirtualGeoPainter.h>
 #include <TRootHelpDialog.h>
-#include <TRootDialog.h>
 
 #include "RootEventData/TRecTrackEvent.h"
 #include "RootEventData/TDigiEvent.h"
 #include "RootEventData/TDisTrack.h"
-#include "RootEventData/TRecEvTime.h"
 using namespace std;
 
 //#ifndef __CINT__
@@ -149,7 +146,6 @@ BesClient::BesClient(const TGWindow *p, const char* title,
     //recdis = NULL;
     recTrack1 = NULL;
     mdchit = NULL;
-    //kalTrack = NULL;
     tofTrack = NULL;
     muctrk = NULL;
     emcshower = NULL;
@@ -681,7 +677,7 @@ void BesClient::CreateUpButtonBar() {
     fZoomRatioNumber = new TGNumberEntryField( fUpButtonBarFrame, kM_Button_ZoomRatioNumber,
             100.0,
             (TGNumberFormat::EStyle) 1, (TGNumberFormat::EAttribute) 0 );
-    fZoomRatioNumber->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
+    fZoomRatioNumber->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
     h = Int_t(fZoomRatioNumber->GetDefaultHeight()/1.2); // default height 22
     charw = fZoomRatioNumber->GetCharWidth("0123456");
     w = charw * TMath::Abs(5) / 10 + 8 + 2 * h / 3 + 2; // 5 is digit width, default width 46
@@ -792,17 +788,6 @@ void BesClient::CreateUpButtonBar() {
     fLoadMyConfigButton->SetWidth(width);
     fLoadMyConfigButton->Connect("Clicked()", "BesClient", this, "HandleButtons()");
     fUpButtonBarFrame->AddFrame(fLoadMyConfigButton, fUpButtonBarItemLayout);
-
-    // Display mdc wire color palette
-    fPaletteButton = new BesGPictureButton(fUpButtonBarFrame,
-            gClient->GetPicture("ButtonPalette.gif"),
-            kM_Button_Palette);
-    fPaletteButton->SetPictureHL(gClient->GetPicture("ButtonPaletteHL.gif"));
-    fPaletteButton->SetToolTipText("Palette");
-    fPaletteButton->SetHeight(height);
-    fPaletteButton->SetWidth(width);
-    fPaletteButton->Connect("Clicked()", "BesClient", this, "HandleButtons()");
-    fUpButtonBarFrame->AddFrame(fPaletteButton, fUpButtonBarItemLayout);
 
     // Up Button Splitter
     fUpButtonBarFrame->AddFrame(fUpButtonSplitter[nUpSplitter], fUpButtonBarItemLayout);
@@ -1028,7 +1013,7 @@ void BesClient::CreateMainFrame() {
     fMainFrame = new TGHorizontalFrame(this, this->GetWidth(), this->GetHeight()-26);
 
     // This vertical frame is needed for splitter
-    fV1 = new TGVerticalFrame(fMainFrame, 250, fMainFrame->GetHeight(), kFixedWidth);
+    fV1 = new TGVerticalFrame(fMainFrame, 50, fMainFrame->GetHeight(), kFixedWidth);
 
     // Create display tabs
     CreateCanvas();
@@ -1066,7 +1051,7 @@ void BesClient::CreateCanvas() {
     fECLayout =  new TGLayoutHints( kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0);
     fEmbeddedCanvas = new TRootEmbeddedCanvas(0, fMainFrame, fMainFrame->GetWidth()/4*3-12, fMainFrame->GetHeight()-46);
     Int_t wid = fEmbeddedCanvas->GetCanvasWindowId();
-    fCanvas = new TCanvas("BesVis", fEmbeddedCanvas->GetWidth(), fEmbeddedCanvas->GetHeight()-10, wid);
+    fCanvas = new TCanvas("BesVis", fEmbeddedCanvas->GetWidth()+50, fEmbeddedCanvas->GetHeight()+30, wid);
     fEmbeddedCanvas->AdoptCanvas(fCanvas);
     fCanvas->cd();
 
@@ -1148,8 +1133,8 @@ void BesClient::CreateTabs() {
     //fNumEntryRotateSpeed = new TGNumberEntry(fRotateSpeedFrame,this->GetRotateSpeed(), 5 ,kM_Button_RotateSpeed,(TGNumberFormat::EStyle) 1,(TGNumberFormat::EAttribute) 1);
     fNumEntryRotateSpeed->SetHeight(20);
     fNumEntryRotateSpeed->SetNumber(this->GetRotateSpeed());
-    fNumEntryRotateSpeed->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryRotateSpeed->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryRotateSpeed->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryRotateSpeed->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 4, 2, 2);
     fWidgets->Add(fLayout);
     fRotateSpeedFrame->AddFrame(fNumEntryRotateSpeed, fLayout);
@@ -1170,8 +1155,8 @@ void BesClient::CreateTabs() {
     fNumEntryRotateFPS = new TGNumberEntry(fRotateFPSFrame,this->GetRotateFPS(), 3, kM_Button_RotateFPS,(TGNumberFormat::EStyle) 0,(TGNumberFormat::EAttribute) 1);
     fNumEntryRotateFPS->SetHeight(20);
     fNumEntryRotateFPS->SetNumber(this->GetRotateFPS());
-    fNumEntryRotateFPS->GetNumberEntry()->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryRotateFPS->GetNumberEntry()->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryRotateFPS->GetNumberEntry()->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryRotateFPS->GetNumberEntry()->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 4, 2, 2);
     fWidgets->Add(fLayout);
     fRotateFPSFrame->AddFrame(fNumEntryRotateFPS, fLayout);
@@ -1229,8 +1214,8 @@ void BesClient::CreateTabs() {
 
     fNumEntryRotateStep->SetHeight(20);
     fNumEntryRotateStep->SetNumber(this->GetRotateStep());
-    fNumEntryRotateStep->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryRotateStep->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryRotateStep->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryRotateStep->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 0, 0, 0);
     fWidgets->Add(fLayout);
     fRotateStepFrame->AddFrame(fNumEntryRotateStep, fLayout);
@@ -1428,7 +1413,7 @@ void BesClient::CreateTabs() {
     fViewAngleThetaNumber = new TGNumberEntryField( fViewAngleThetaFrame, kM_Button_ViewAngleThetaNumber,
             fViewAngleThetaSlider->GetPosition(),
             (TGNumberFormat::EStyle) 1, (TGNumberFormat::EAttribute) 0 );
-    fViewAngleThetaNumber->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
+    fViewAngleThetaNumber->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
     h = fViewAngleThetaNumber->GetDefaultHeight();
     charw = fViewAngleThetaNumber->GetCharWidth("0123456");
     w = charw * TMath::Abs(4) / 10 + 8 + 2 * h / 3; // 4 is digit width
@@ -1491,7 +1476,7 @@ void BesClient::CreateTabs() {
     fViewAnglePhiNumber = new TGNumberEntryField( fViewAnglePhiFrame, kM_Button_ViewAnglePhiNumber,
             fViewAnglePhiSlider->GetPosition(),
             (TGNumberFormat::EStyle) 1, (TGNumberFormat::EAttribute) 0 );
-    fViewAnglePhiNumber->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
+    fViewAnglePhiNumber->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
     h = fViewAnglePhiNumber->GetDefaultHeight();
     charw = fViewAnglePhiNumber->GetCharWidth("0123456");
     w = charw * TMath::Abs(4) / 10 + 8 + 2 * h / 3; // 4 is digit width
@@ -1554,7 +1539,7 @@ void BesClient::CreateTabs() {
     fViewAnglePsiNumber = new TGNumberEntryField( fViewAnglePsiFrame, kM_Button_ViewAnglePsiNumber,
             fViewAnglePsiSlider->GetPosition(),
             (TGNumberFormat::EStyle) 1, (TGNumberFormat::EAttribute) 0 );
-    fViewAnglePsiNumber->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
+    fViewAnglePsiNumber->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
     h = fViewAnglePsiNumber->GetDefaultHeight();
     charw = fViewAnglePsiNumber->GetCharWidth("0123456");
     w = charw * TMath::Abs(4) / 10 + 8 + 2 * h / 3; // 4 is digit width
@@ -1614,8 +1599,8 @@ void BesClient::CreateTabs() {
     fNumEntryRunNo = new TGNumberEntry(fBesRunFrame,this->GetBesRunNo(),12,kM_Button_BesRun,(TGNumberFormat::EStyle) 0,(TGNumberFormat::EAttribute) 1); // 16 is ditits number in the entry
     fNumEntryRunNo->SetHeight(20);
     fNumEntryRunNo->SetNumber(this->GetBesRunNo());
-    fNumEntryRunNo->GetNumberEntry()->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryRunNo->GetNumberEntry()->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryRunNo->GetNumberEntry()->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryRunNo->GetNumberEntry()->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsRight, 4, 4, 4, 4);
     fWidgets->Add(fLayout);
     fBesRunFrame->AddFrame(fNumEntryRunNo, fLayout);
@@ -1634,8 +1619,8 @@ void BesClient::CreateTabs() {
     fNumEntryEventNo = new TGNumberEntry(fBesEventFrame,this->GetBesEventNo(),12,kM_Button_BesEvent,(TGNumberFormat::EStyle) 0,(TGNumberFormat::EAttribute) 1);
     fNumEntryEventNo->SetHeight(20);
     fNumEntryEventNo->SetNumber(this->GetBesEventNo());
-    fNumEntryEventNo->GetNumberEntry()->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryEventNo->GetNumberEntry()->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryEventNo->GetNumberEntry()->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryEventNo->GetNumberEntry()->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsRight, 4, 4, 4, 4);
     fWidgets->Add(fLayout);
     fBesEventFrame->AddFrame(fNumEntryEventNo, fLayout);
@@ -1735,8 +1720,8 @@ void BesClient::CreateTabs() {
             (TGNumberFormat::EStyle) 1,(TGNumberFormat::EAttribute) 1);
     fNumEntryEventPlaySpeed->SetHeight(20);
     fNumEntryEventPlaySpeed->SetNumber(this->GetEventPlaySpeed()/1000.0);
-    fNumEntryEventPlaySpeed->GetNumberEntry()->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
-    fNumEntryEventPlaySpeed->GetNumberEntry()->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    fNumEntryEventPlaySpeed->GetNumberEntry()->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
+    fNumEntryEventPlaySpeed->GetNumberEntry()->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 4, 4, 4);
     fWidgets->Add(fLayout);
     fEventPlaySpeedFrame->AddFrame(fNumEntryEventPlaySpeed, fLayout);
@@ -2034,41 +2019,23 @@ void BesClient::CreateTabs() {
     tf->SetBackgroundPixmap(GetPic("8.gif"));
 
     //Mdc TQMatch
-    fFrameMdcMatch =new TGGroupFrame(tf, "Mdc Status");
+    fFrameMdcMatch =new TGGroupFrame(tf, "Mdc TQ Match");
     fLayout = new TGLayoutHints(kLHintsExpandX, 15, 15, 15, 15);
     fWidgets->Add(fLayout);
     tf->AddFrame(fFrameMdcMatch, fLayout);
 
-    fChkBtnMdcTMatchGlobal = new TGCheckButton(fFrameMdcMatch, "T Fire", kM_Mdc_TMatch_Global);
+    fChkBtnMdcTMatchGlobal = new TGCheckButton(fFrameMdcMatch, "T Match", kM_Mdc_TMatch_Global);
     fChkBtnMdcTMatchGlobal->SetState(kButtonDown);
     //fChkBtnMdcTMatchGlobal->SetOn();
     fFrameMdcMatch->AddFrame(fChkBtnMdcTMatchGlobal);
     fChkBtnMdcTMatchGlobal->Connect("Clicked()", "BesClient", this, "SetState()");
 
-    fChkBtnMdcQMatchGlobal = new TGCheckButton(fFrameMdcMatch, "Q Fire", kM_Mdc_QMatch_Global);
+    fChkBtnMdcQMatchGlobal = new TGCheckButton(fFrameMdcMatch, "Q Match", kM_Mdc_QMatch_Global);
     fChkBtnMdcQMatchGlobal->SetState(kButtonDown);
     //fChkBtnMdcQMatchGlobal->SetOn();
     fFrameMdcMatch->AddFrame(fChkBtnMdcQMatchGlobal);
     fChkBtnMdcQMatchGlobal->Connect("Clicked()", "BesClient", this, "SetState()");
 
-    fChkBtnMdcQOverflowGlobal = new TGCheckButton(fFrameMdcMatch, "Q Not Overflow", kM_Mdc_QNotOverflow_Global);
-    fChkBtnMdcQOverflowGlobal->SetState(kButtonUp);
-    //fChkBtnMdcQOverflowGlobal->SetOn();
-    fFrameMdcMatch->AddFrame(fChkBtnMdcQOverflowGlobal);
-    fChkBtnMdcQOverflowGlobal->Connect("Clicked()", "BesClient", this, "SetState()");
-
-    //Colorful Mdc Wire 
-    fChkBtnMdcColorfulWireGlobal = new TGCheckButton(fFrameMdcMatch, "Colorful Wire", kM_Mdc_ColorfulWire_Global);
-    fChkBtnMdcColorfulWireGlobal->SetState(kButtonUp);
-    fFrameMdcMatch->AddFrame(fChkBtnMdcColorfulWireGlobal);
-    fChkBtnMdcColorfulWireGlobal->Connect("Clicked()", "BesClient", this, "SetState()");
-
-    //Mdc time substract event start time
-    fChkBtnMdcTimeSubEvTimeGlobal = new TGCheckButton(fFrameMdcMatch, "Sub EvTime", kM_Mdc_MdcTimeSubEvTime_Global);
-    fChkBtnMdcTimeSubEvTimeGlobal->SetState(kButtonUp);
-    fFrameMdcMatch->AddFrame(fChkBtnMdcTimeSubEvTimeGlobal);
-    fChkBtnMdcTimeSubEvTimeGlobal->Connect("Clicked()", "BesClient", this, "SetState()");
-    
     //Tof TQMatch
     fFrameTofMatch =new TGGroupFrame(tf, "Tof TQ Match");
     fLayout = new TGLayoutHints(kLHintsExpandX, 15, 15, 15, 15);
@@ -2102,9 +2069,9 @@ void BesClient::CreateTabs() {
     fNumEntryMagnetic->SetHeight(20);
     fNumEntryMagnetic->SetNumber(1.0);
     fNumEntryMagnetic->GetNumberEntry()
-    ->Connect("ReturnPressed()","BesClient",this,"ExecuteReturn()");
+    ->Connect("ReturnPressed","BesClient",this,"ExecuteReturn()");
     fNumEntryMagnetic->GetNumberEntry()
-    ->Connect("TabPressed()","BesClient",this,"ChangeFocus()");
+    ->Connect("TabPressed","BesClient",this,"ChangeFocus()");
     fLayout = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 4, 4, 4);
     fWidgets->Add(fLayout);
     fFrameMagnetic->AddFrame(fNumEntryMagnetic, fLayout);
@@ -2115,34 +2082,16 @@ void BesClient::CreateTabs() {
     }
 }
 
-void BesClient::SetMdcQNotOverflow(Bool_t input){
+
+void BesClient::SetMdcTMatch(Bool_t input){
     if (gBesGeometry){
-        gBesGeometry->GetMdcROOTGeo()->SetQNotOverflow(input);
+        gBesGeometry->GetMdcROOTGeo()->SetTMatch(input);
     }
 }
 
-
-void BesClient::SetMdcTFire(Bool_t input){
+void BesClient::SetMdcQMatch(Bool_t input){
     if (gBesGeometry){
-        gBesGeometry->GetMdcROOTGeo()->SetTFire(input);
-    }
-}
-
-void BesClient::SetMdcQFire(Bool_t input){
-    if (gBesGeometry){
-        gBesGeometry->GetMdcROOTGeo()->SetQFire(input);
-    }
-}
-
-void BesClient::SetMdcColorfulWire(Bool_t input){
-    if (gBesGeometry){
-        gBesGeometry->GetMdcROOTGeo()->SetColorfulWire(input);
-    }
-}
-
-void BesClient::SetMdcTimeSubEvTime(Bool_t input){
-    if (gBesGeometry){
-        gBesGeometry->GetMdcROOTGeo()->SetMdcTimeSubEvTime(input);
+        gBesGeometry->GetMdcROOTGeo()->SetQMatch(input);
     }
 }
 
@@ -3260,18 +3209,6 @@ void BesClient::LoadMyConfig() {
 
 //_____________________________________________________
 
-void BesClient::LoadMdcPalette() {
-    cout<<"BesClient Loading PaletteAxis ... "<<endl;
-
-    new BesMdcPalette(gClient->GetRoot(), this);
-
-    //TRootHelpDialog* hd1 = new TRootHelpDialog(this, "Mdc Wire Palette",200, 600);
-    //hd1->ChangeSubframesBackground(GetPic("MdcPalette.gif"));
-    //hd1->Popup();
-}
-
-//_____________________________________________________
-
 void BesClient::Help() {
 
     //char str[32];
@@ -3313,23 +3250,23 @@ void BesClient::X3D() {
     if (!view) return;
 
     if (view && view->GetViewType() & k3DView) {
-	//gPad->x3d();
-	gPad->GetViewer3D();
-	// use TPad::Getviewer3D() instead of depreciated function x3d()
-	// changed by tianhl at Mon Aug 20 2007
-	fViewer3DMode = 1;
+        //gPad->x3d();
+        gPad->GetViewer3D();
+        // use TPad::Getviewer3D() instead of depreciated function x3d()
+        // changed by tianhl at Mon Aug 20 2007
+        fViewer3DMode = 1;
 
-	TViewerX3D *x3d = 0;
-	x3d = (TViewerX3D*)gPad->GetViewer3D();
-	//x3d = (TViewerX3D*)TViewerX3D::Viewer3D("x3d");
-	if (!x3d) cout << " x3d does not exist "<< endl;
-	else
-	    x3d->ExecCommand(0,0,'r');
-	//x3d->ExecCommand(0,0,'w');
+        TViewerX3D *x3d = 0;
+        x3d = (TViewerX3D*)gPad->GetViewer3D();
+        //x3d = (TViewerX3D*)TViewerX3D::Viewer3D("x3d");
+        if (!x3d) cout << " x3d does not exist "<< endl;
+        else
+            x3d->ExecCommand(0,0,'r');
+        //x3d->ExecCommand(0,0,'w');
     }
     else {
-	string s("Could not start X3D for 2D view, swith to 3D view first");
-	this->HandleError(s.c_str());
+        string s("Could not start X3D for 2D view, swith to 3D view first");
+        this->HandleError(s.c_str());
     }
 }
 
@@ -3340,26 +3277,26 @@ void BesClient::OpenGL() {
     BesView *view = (BesView*)gPad->GetView();
     if (!view) return;
 
-    //    if (view->GetViewType() & k3DView) {
-    //        //gPad->x3d("ogl");
-    //        gPad->GetViewer3D("ogl");
-    //        // use TPad::GetViewer3D() instead of depreciated function TPad::x3d
-    //        // changed by tianhl at Mon Aug 20 2007
-    //        fViewer3DMode = 2;
-    //
-    //        //TViewerOpenGL *ogl = 0;
-    //        //ogl = (TViewerOpenGL*)gPad->GetViewer3D();
-    //        // update from 4.04 to 5.14
-    //        TVirtualViewer3D *ogl = 0;
-    //        ogl = (TVirtualViewer3D*)gPad->GetViewer3D("ogl");
-    //
-    //        if (!ogl) cout << " ogl does not exist " << endl;
-    //        UpdateCurrentPad();
-    //    }
-    //    else {
-    //        string s("Could not start OpenGL for 2D view, swith to 3D view first");
-    //        this->HandleError(s.c_str());
-    //    }
+//    if (view->GetViewType() & k3DView) {
+//        //gPad->x3d("ogl");
+//        gPad->GetViewer3D("ogl");
+//        // use TPad::GetViewer3D() instead of depreciated function TPad::x3d
+//        // changed by tianhl at Mon Aug 20 2007
+//        fViewer3DMode = 2;
+//
+//        //TViewerOpenGL *ogl = 0;
+//        //ogl = (TViewerOpenGL*)gPad->GetViewer3D();
+//        // update from 4.04 to 5.14
+//        TVirtualViewer3D *ogl = 0;
+//        ogl = (TVirtualViewer3D*)gPad->GetViewer3D("ogl");
+//
+//        if (!ogl) cout << " ogl does not exist " << endl;
+//        UpdateCurrentPad();
+//    }
+//    else {
+//        string s("Could not start OpenGL for 2D view, swith to 3D view first");
+//        this->HandleError(s.c_str());
+//    }
 }
 
 
@@ -3381,2069 +3318,2018 @@ Bool_t BesClient::GetEvent(Long64_t i)
 {
     if (fEventTree) {
 
-	Long64_t nEvents = fEventTree->GetEntries();
-	if (i >= 0 && i < nEvents) {
+        Long64_t nEvents = fEventTree->GetEntries();
+        if (i >= 0 && i < nEvents) {
 
-	    fDigiEvent = 0;
-	    fEvtHeader = 0;
-	    fRecEvTime = 0;
-	    //fTrigEvent = 0;
-	    TDisTrack * fRecEvent = new TDisTrack();
-	    if (f_bossMode == true){
-		TBranch *digiEvent = fEventTree->GetBranch("TDigiEvent");
-		TBranch *evtHeader = fEventTree->GetBranch("TEvtHeader");
-		//TBranch *trigEvent = fEventTree->GetBranch("TTrigEvent");
-		TBranch *disTrack  = fEventTree->GetBranch("TDisTrack");
-		digiEvent->SetAddress(&fDigiEvent);
-		//trigEvent->SetAddress(&fTrigEvent);
-		disTrack->SetAddress(&fRecEvent);
-		disTrack->GetEntry(i);
-		digiEvent->GetEntry(i);
-		evtHeader->GetEntry(i);
+            fDigiEvent = 0;
+            fEvtHeader = 0;
+            //fTrigEvent = 0;
+            TDisTrack * fRecEvent = new TDisTrack();
+            if (f_bossMode == true){
+                TBranch *digiEvent = fEventTree->GetBranch("TDigiEvent");
+                TBranch *evtHeader = fEventTree->GetBranch("TEvtHeader");
+                //TBranch *trigEvent = fEventTree->GetBranch("TTrigEvent");
+                TBranch *disTrack  = fEventTree->GetBranch("TDisTrack");
+                digiEvent->SetAddress(&fDigiEvent);
+                evtHeader->SetAddress(&fEvtHeader);
+                //trigEvent->SetAddress(&fTrigEvent);
+                disTrack->SetAddress(&fRecEvent);
+                disTrack->GetEntry(i);
+                digiEvent->GetEntry(i);
+                evtHeader->GetEntry(i);
 		//trigEvent->GetEntry(i);
-	    }
+            }
 
-	    if (f_bossMode == false){
-		fEventTree->GetEntry(i);
-		if (recTrack1){
-		    delete [] recTrack1;
-		    recTrack1 = NULL;
-		}
-		//yzhang get event start time
-		if(fRecEvent_1){
-		    if(fRecEvent_1->getEvTimeCol()->GetEntries()==1){
-			fRecEvTime = (TRecEvTime*) fRecEvent_1->getEvTimeCol()->At(0);
-		    }else{
-			cout<<"WARNING:EsTimeCol size!=1, size="<<fRecEvent_1->getEvTimeCol()->GetEntries()<<endl;
-		    }
-		}
-		//zhangy
+            if (f_bossMode == false){
+                fEventTree->GetEntry(i);
+                if (recTrack1){
+                    delete [] recTrack1;
+                    recTrack1 = NULL;
+                }
 
-		int no = 0;
+                int no = 0;
 
-		recTrack1 = new TRecMdcTrack[20];
+                recTrack1 = new TRecMdcTrack[20];
 
 		if (fRecEvent_1){
-		    if (fRecEvent_1->getRecMdcTrackCol()){
-			no=(fRecEvent_1->getRecMdcTrackCol())->GetEntries();
-		    }
-		    if (no>20) no=20;
-		    for (int i=0;i<no;i++){
-			const TRecMdcTrack* recTrack =fRecEvent_1->getRecMdcTrack(i);
-			(recTrack1+i)->setTRecMdcTrack(recTrack);
-			fRecEvent->addRecMdcTrack(recTrack1+i);
-		    }
+		  if (fRecEvent_1->getRecMdcTrackCol()){
+		    no=(fRecEvent_1->getRecMdcTrackCol())->GetEntries();
+		  }
+		  if (no>20) no=20;
+		  for (int i=0;i<no;i++){
+		    const TRecMdcTrack* recTrack =fRecEvent_1->getRecMdcTrack(i);
+		    (recTrack1+i)->setTRecMdcTrack(recTrack);
+		    fRecEvent->addRecMdcTrack(recTrack1+i);
+		  }
 
-		    ////yzhang
-		    //if (kalTrack){
-		    //    delete [] kalTrack;
-		    //    kalTrack = NULL;
-		    //}
-		    //kalTrack = new TRecMdcKalTrack[20];
-		    //no=0;
-		    //if (fRecEvent_1->getRecMdcKalTrackCol()){
-		    //    no=(fRecEvent_1->getRecMdcKalTrackCol())->GetEntries();
-		    //}
-		    //if (no>20) no=20;
-		    //for (int i=0;i<no;i++){
-		    //    TRecMdcKalTrack* kalTrack1 = const_cast<TRecMdcKalTrack*> (fRecEvent_1->getRecMdcKalTrack(i));
-		    //    //(kalTrack+i)->setTRecMdcKalTrack(kalTrack1);
-		    //    fRecEvent->addRecMdcKalTrack(kalTrack1);
-		    //}
-		    ////zhangy
+		  if (tofTrack){
+		    delete [] tofTrack;
+		    tofTrack = NULL;
+		  }
+		  tofTrack = new TRecTofTrack[200];
+		  no=0;
+		  if (fRecEvent_1->getTofTrackCol()){
+		    no = (fRecEvent_1->getTofTrackCol())->GetEntries();
+		  }
 
-		    if (tofTrack){
-			delete [] tofTrack;
-			tofTrack = NULL;
-		    }
-		    tofTrack = new TRecTofTrack[200];
-		    no=0;
-		    if (fRecEvent_1->getTofTrackCol()){
-			no = (fRecEvent_1->getTofTrackCol())->GetEntries();
-		    }
+		  if (no>200) no =200;
+		  for (int i=0;i<no;i++){
+		    const TRecTofTrack* tofTrack1 =fRecEvent_1->getTofTrack(i);
+		    (tofTrack+i)->setTRecTofTrack(tofTrack1);
+		    fRecEvent->addTofTrack(tofTrack+i);
+		  }
 
-		    if (no>200) no =200;
-		    for (int i=0;i<no;i++){
-			const TRecTofTrack* tofTrack1 =fRecEvent_1->getTofTrack(i);
-			(tofTrack+i)->setTRecTofTrack(tofTrack1);
-			fRecEvent->addTofTrack(tofTrack+i);
-		    }
+		  if (mdchit){
+		    delete [] mdchit;
+		    mdchit = NULL;
+		  }
+		  mdchit = new TRecMdcHit[1000];
+		  no=0;
+		  if (fRecEvent_1->getRecMdcHitCol()){
+		    no = (fRecEvent_1->getRecMdcHitCol())->GetEntries();
+		  }
+		  if (no>1000) no =1000;
+		  for (int i=0;i<no;i++){
+		    const TRecMdcHit* mdchit1 =fRecEvent_1->getRecMdcHit(i);
+		    (mdchit+i)->setTRecMdcHit(mdchit1);
+		    fRecEvent->addRecMdcHit(mdchit+i);
+		  }
 
-		    if (mdchit){
-			delete [] mdchit;
-			mdchit = NULL;
-		    }
-		    mdchit = new TRecMdcHit[1000];
-		    no=0;
-		    if (fRecEvent_1->getRecMdcHitCol()){
-			no = (fRecEvent_1->getRecMdcHitCol())->GetEntries();
-		    }
-		    if (no>1000) no =1000;
-		    for (int i=0;i<no;i++){
-			const TRecMdcHit* mdchit1 =fRecEvent_1->getRecMdcHit(i);
-			(mdchit+i)->setTRecMdcHit(mdchit1);
-			fRecEvent->addRecMdcHit(mdchit+i);
-		    }
+		  if (muctrk){
+		    delete [] muctrk;
+		    muctrk= NULL;
+		  }
+		  muctrk = new TRecMucTrack[20];
+		  no=0;
+		  if (fRecEvent_1->getMucTrackCol()){
+		    no = (fRecEvent_1->getMucTrackCol())->GetEntries();
+		  }
+		  if (no>20) no=20;
+		  for (int i=0;i<no;i++){
+		    const TRecMucTrack* mucTrack1 =fRecEvent_1->getMucTrack(i);
+		    (muctrk+i)->setTRecMucTrack(mucTrack1);
+		    fRecEvent->addMucTrack(muctrk+i);
+		  }
 
-		    if (muctrk){
-			delete [] muctrk;
-			muctrk= NULL;
-		    }
-		    muctrk = new TRecMucTrack[20];
-		    no=0;
-		    if (fRecEvent_1->getMucTrackCol()){
-			no = (fRecEvent_1->getMucTrackCol())->GetEntries();
-		    }
-		    if (no>20) no=20;
-		    for (int i=0;i<no;i++){
-			const TRecMucTrack* mucTrack1 =fRecEvent_1->getMucTrack(i);
-			(muctrk+i)->setTRecMucTrack(mucTrack1);
-			fRecEvent->addMucTrack(muctrk+i);
-		    }
-
-		    if (emcshower){
-			delete [] emcshower;
-			emcshower=NULL;
-		    }
-		    emcshower = new TRecEmcShower[20];
-		    no=0;
-		    if (fRecEvent_1->getEmcShowerCol()){
-			no = (fRecEvent_1->getEmcShowerCol())->GetEntries();
-		    }
-		    if (no>20) no=20;
-		    for (int i=0;i<no;i++){
-			const TRecEmcShower* rec_emc =fRecEvent_1->getEmcShower(i);
-			(emcshower+i)->setTRecEmcShower(rec_emc);
-			fRecEvent->addEmcShower(emcshower+i);
-		    }
+		  if (emcshower){
+		    delete [] emcshower;
+		    emcshower=NULL;
+		  }
+		  emcshower = new TRecEmcShower[20];
+		  no=0;
+		  if (fRecEvent_1->getEmcShowerCol()){
+		    no = (fRecEvent_1->getEmcShowerCol())->GetEntries();
+		  }
+		  if (no>20) no=20;
+		  for (int i=0;i<no;i++){
+		    const TRecEmcShower* rec_emc =fRecEvent_1->getEmcShower(i);
+		    (emcshower+i)->setTRecEmcShower(rec_emc);
+		    fRecEvent->addEmcShower(emcshower+i);
+		  }
 		}
 	    }
 
 
 	    //fEvent->SetEvent(fDigiEvent, fRecEvent, fEvtHeader, fTrigEvent);
-	    fEvent->SetEvent(fDigiEvent, fRecEvent, fEvtHeader, fRecEvTime);
+	    fEvent->SetEvent(fDigiEvent, fRecEvent, fEvtHeader );
 	    //delete fRecEvent;
 	    UpdateAllView();
 	    UpdateStatus();
 	    return true;
 	}
 	else {
-	    fAutoDisplayEvent = kFALSE;
-	    if (fAutoDisplayEventTimer) {
-		fAutoDisplayEventTimer->TurnOff();
-		fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventPlay.gif"));
-	    }
+	  fAutoDisplayEvent = kFALSE;
+	  if (fAutoDisplayEventTimer) {
+	    fAutoDisplayEventTimer->TurnOff();
+	    fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventPlay.gif"));
+	  }
 
-	    ostringstream s;
-	    s << "Request event entry " << i
-		<< " does not exist ! \n valid ("
-		<< 0 << "~" << nEvents - 1  << ")";
-	    this->HandleError(s.str().c_str());
-	    return false;
+	  ostringstream s;
+	  s << "Request event entry " << i
+	    << " does not exist ! \n valid ("
+	    << 0 << "~" << nEvents - 1  << ")";
+	  this->HandleError(s.str().c_str());
+	  return false;
 	}
     }
     else {
-	fAutoDisplayEvent = kFALSE;
-	if (fAutoDisplayEventTimer) fAutoDisplayEventTimer->TurnOff();
-	this->HandleError("Event Tree does not exist !");
-	return false;
+      fAutoDisplayEvent = kFALSE;
+      if (fAutoDisplayEventTimer) fAutoDisplayEventTimer->TurnOff();
+      this->HandleError("Event Tree does not exist !");
+      return false;
     }
 }
 
 Bool_t BesClient::GetRecEvent(){
-    int		semid, shmid, n, runNo;
-    int		*shmptr;
-    int         sem_value_F, sem_value_O;
+  int		semid, shmid, n, runNo;
+  int		*shmptr;
+  int         sem_value_F, sem_value_O;
 
-    // set autodisplay on
-    if (fAutoDisplayEvent){
-	if (fAutoDisplayEventTimer)
-	    fAutoDisplayEventTimer->TurnOn();
-	fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventStop.gif"));
+  // set autodisplay on
+  if (fAutoDisplayEvent){
+    if (fAutoDisplayEventTimer)
+      fAutoDisplayEventTimer->TurnOn();
+    fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventStop.gif"));
+  }
+
+  // access semaphore
+  if ((semid = semget(f_pid, 2, 0)) == -1){
+    perror("concumer -- access -- semget");
+    exit(0);
+  }
+  else {
+    acquire.sem_num = OUTPUT_STORE;
+    //*******************************
+    // Debug information
+    //*******************************
+    //std::cout << "acquire.sem_num: " << OUTPUT_STORE << std::endl;
+    //std::cout << "acquire.sem_num: " << acquire.sem_num << std::endl;
+    //std::cout << "acquire.sem_op:  " << acquire.sem_op << std::endl;
+    //
+    //std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
+    //std::cout << "besvis has gotten semid: " << semid << std::endl;
+    //std::cout << "before change OUTPUT_STORE" << std::endl;
+
+    //if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
+    //  perror("Can not get FREE_SPACE");
+    //}
+    ////if (sem_value_F == 1) return true;
+    //std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
+
+
+    //std::cout << "OUTPUT_STORE will decrease from 1 to 0" << std::endl;
+    //*******************************
+    // operate semaphore:OUTPUT_STORE
+    //*******************************
+    if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
+      perror("Can not get OUTPUT_STORE");
     }
-
-    // access semaphore
-    if ((semid = semget(f_pid, 2, 0)) == -1){
-	perror("concumer -- access -- semget");
+    //std::cout << "Semaphore OUTPUT_STORE has value of(refer 1) " << sem_value_O << std::endl;
+    if (sem_value_O == 0) return true;
+    if (f_runStatus == RUN_ERROR){
+      release.sem_num = FREE_SPACE;
+      if (semop(semid, &release, 1) == -1){
+	perror("consumer -- increase -- freeSpace");
 	exit(0);
+      }
+      std::cout << "read data error " <<  std::endl;
+      f_runStatus = RUN_SMOOTH;
+      return true;
     }
-    else {
-	acquire.sem_num = OUTPUT_STORE;
-	//*******************************
-	// Debug information
-	//*******************************
-	//std::cout << "acquire.sem_num: " << OUTPUT_STORE << std::endl;
-	//std::cout << "acquire.sem_num: " << acquire.sem_num << std::endl;
-	//std::cout << "acquire.sem_op:  " << acquire.sem_op << std::endl;
-	//
-	//std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
-	//std::cout << "besvis has gotten semid: " << semid << std::endl;
-	//std::cout << "before change OUTPUT_STORE" << std::endl;
+    f_runStatus = RUN_ERROR;
 
-	//if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
-	//  perror("Can not get FREE_SPACE");
-	//}
-	////if (sem_value_F == 1) return true;
-	//std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
-
-
-	//std::cout << "OUTPUT_STORE will decrease from 1 to 0" << std::endl;
-	//*******************************
-	// operate semaphore:OUTPUT_STORE
-	//*******************************
-	if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
-	    perror("Can not get OUTPUT_STORE");
-	}
-	//std::cout << "Semaphore OUTPUT_STORE has value of(refer 1) " << sem_value_O << std::endl;
-	if (sem_value_O == 0) return true;
-	if (f_runStatus == RUN_ERROR){
-	    release.sem_num = FREE_SPACE;
-	    if (semop(semid, &release, 1) == -1){
-		perror("consumer -- increase -- freeSpace");
-		exit(0);
-	    }
-	    std::cout << "read data error " <<  std::endl;
-	    f_runStatus = RUN_SMOOTH;
-	    return true;
-	}
-	f_runStatus = RUN_ERROR;
-
-	if (semop(semid, &acquire, 1) == -1){
-	    perror("consumer -- decrease -- storage");
-	    exit(0);
-	}
-
-	//*******************************
-	// Debug information
-	//*******************************
-	//std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
-	//std::cout << "besvis has gotten semid: " << semid << std::endl;
-	//std::cout << "besvis will read data" << std::endl;
-	//std::cout << "OUTPUT_STORE must decrease from 1 to 0" << std::endl;
-
-	//if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
-	//  perror("Can not get FREE_SPACE");
-	//}
-	//std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
-	//
-	//if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
-	//  perror("Can not get OUTPUT_STORE");
-	//}
-	//std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
-	//*******************************
-	if (fCurrentEvent >= 1){
-	    if (fDigiEvent){
-		//fDigiEvent->Clear();
-		delete fDigiEvent;
-		fDigiEvent=0;
-	    }
-	    if (fEvtHeader){
-		fEvtHeader->Clear();
-		delete fEvtHeader;
-		fEvtHeader=0;
-	    }
-	    //if (fTrigEvent){
-	    //    //fTrigEvent->Clear();
-	    //    delete fTrigEvent;
-	    //    fTrigEvent=0;
-	    //}
-	    if (fEvent){
-		delete fEvent;
-		fEvent = NULL;
-	    }
-	}
-
-
-	//*******************************
-	// read from share file
-	//*******************************
-	OpenEventFile(f_evtFile);
-	if (fEventFile == NULL){
-	    return true;
-	}
-	if (fEventTree)
-	    delete fEventTree;
-	fEventFile->Close();
-	delete fEventFile;
-	//*******************************
-
-	release.sem_num = FREE_SPACE;
-	//*******************************
-	// Debug information
-	//*******************************
-	//std::cout << "release.sem_num: " << FREE_SPACE << std::endl;
-	//std::cout << "release.sem_num: " << release.sem_num << std::endl;
-	//std::cout << "release.sem_op:  " << release.sem_op << std::endl;
-	//
-	//std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
-	//std::cout << "besvis has gotten semid: " << semid << std::endl;
-	//std::cout << "besvis has read data" << std::endl;
-	//std::cout << "before change FREE_SPACE" << std::endl;
-
-	//if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
-	//  perror("Can not get FREE_SPACE");
-	//}
-	//std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
-	//
-	//if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
-	//  perror("Can not get OUTPUT_STORE");
-	//}
-	//std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
-	//
-	//std::cout << "FREE_SPACE will increase from 0 to 1" << std::endl;
-	//*******************************
-	// operate semaphore:FREE_SPACE
-	//*******************************
-	if (semop(semid, &release, 1) == -1){
-	    perror("consumer -- increase -- freeSpace");
-	    exit(0);
-	}
-	std::cout << "Current Event No. : " << fCurrentEvent++ << std::endl;
-	//*******************************
-	// Debug information
-	//*******************************
-	//std::cout << "besvis has gotten semid: " << semid << std::endl;
-	//std::cout << "besvis has read data" << std::endl;
-	//std::cout << "FREE_SPACE must increase from 0 to 1" << std::endl;
-
-	//if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
-	//  perror("Can not get FREE_SPACE");
-	//}
-	//std::cout << "Semaphore FREE_SPACE has value of(refer 1) " <<  sem_value_F << std::endl;
-	//
-	//if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
-	//  perror("Can not get OUTPUT_STORE");
-	//}
-	//std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
-	//*******************************
+    if (semop(semid, &acquire, 1) == -1){
+      perror("consumer -- decrease -- storage");
+      exit(0);
     }
-    f_runStatus = RUN_SMOOTH;
-    return true;
+
+    //*******************************
+    // Debug information
+    //*******************************
+    //std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
+    //std::cout << "besvis has gotten semid: " << semid << std::endl;
+    //std::cout << "besvis will read data" << std::endl;
+    //std::cout << "OUTPUT_STORE must decrease from 1 to 0" << std::endl;
+
+    //if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
+    //  perror("Can not get FREE_SPACE");
+    //}
+    //std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
+    //
+    //if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
+    //  perror("Can not get OUTPUT_STORE");
+    //}
+    //std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
+    //*******************************
+    if (fCurrentEvent >= 1){
+      if (fDigiEvent){
+	//fDigiEvent->Clear();
+	delete fDigiEvent;
+	fDigiEvent=0;
+      }
+      if (fEvtHeader){
+	fEvtHeader->Clear();
+	delete fEvtHeader;
+	fEvtHeader=0;
+      }
+      //if (fTrigEvent){
+      //    //fTrigEvent->Clear();
+      //    delete fTrigEvent;
+      //    fTrigEvent=0;
+      //}
+      if (fEvent){
+	delete fEvent;
+	fEvent = NULL;
+      }
+    }
+
+
+    //*******************************
+    // read from share file
+    //*******************************
+    OpenEventFile(f_evtFile);
+    if (fEventFile == NULL){
+      return true;
+    }
+    if (fEventTree)
+      delete fEventTree;
+    fEventFile->Close();
+    delete fEventFile;
+    //*******************************
+
+    release.sem_num = FREE_SPACE;
+    //*******************************
+    // Debug information
+    //*******************************
+    //std::cout << "release.sem_num: " << FREE_SPACE << std::endl;
+    //std::cout << "release.sem_num: " << release.sem_num << std::endl;
+    //std::cout << "release.sem_op:  " << release.sem_op << std::endl;
+    //
+    //std::cout << "Current Event No. : " << fCurrentEvent << std::endl;
+    //std::cout << "besvis has gotten semid: " << semid << std::endl;
+    //std::cout << "besvis has read data" << std::endl;
+    //std::cout << "before change FREE_SPACE" << std::endl;
+
+    //if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
+    //  perror("Can not get FREE_SPACE");
+    //}
+    //std::cout << "Semaphore FREE_SPACE has value of(refer 0) " <<  sem_value_F << std::endl;
+    //
+    //if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
+    //  perror("Can not get OUTPUT_STORE");
+    //}
+    //std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
+    //
+    //std::cout << "FREE_SPACE will increase from 0 to 1" << std::endl;
+    //*******************************
+    // operate semaphore:FREE_SPACE
+    //*******************************
+    if (semop(semid, &release, 1) == -1){
+      perror("consumer -- increase -- freeSpace");
+      exit(0);
+    }
+    std::cout << "Current Event No. : " << fCurrentEvent++ << std::endl;
+    //*******************************
+    // Debug information
+    //*******************************
+    //std::cout << "besvis has gotten semid: " << semid << std::endl;
+    //std::cout << "besvis has read data" << std::endl;
+    //std::cout << "FREE_SPACE must increase from 0 to 1" << std::endl;
+
+    //if ((sem_value_F = semctl(semid, FREE_SPACE, GETVAL, 0)) == -1){
+    //  perror("Can not get FREE_SPACE");
+    //}
+    //std::cout << "Semaphore FREE_SPACE has value of(refer 1) " <<  sem_value_F << std::endl;
+    //
+    //if ((sem_value_O = semctl(semid, OUTPUT_STORE, GETVAL, 0)) == -1){
+    //  perror("Can not get OUTPUT_STORE");
+    //}
+    //std::cout << "Semaphore OUTPUT_STORE has value of(refer 0) " << sem_value_O << std::endl;
+    //*******************************
+  }
+  f_runStatus = RUN_SMOOTH;
+  return true;
 }
 //_____________________________________________________
 
 Bool_t BesClient::NextEvent()
 {
-    Bool_t status;
-    fBesEventNo++;
-    if ( f_bossMode == false) {
-	status = GetEvent(fBesEventNo);
-    }
-    else if ( f_bossMode == true) {
-	std::cout << "In Boss Mode, execute NextEvent()" << std::endl;
-	status = GetRecEvent();
-    }
-    if (!status) fBesEventNo--;
-    return status;
+  Bool_t status;
+  fBesEventNo++;
+  if ( f_bossMode == false) {
+    status = GetEvent(fBesEventNo);
+  }
+  else if ( f_bossMode == true) {
+    std::cout << "In Boss Mode, execute NextEvent()" << std::endl;
+    status = GetRecEvent();
+  }
+  if (!status) fBesEventNo--;
+  return status;
 }
 
 //_____________________________________________________
 
 Bool_t BesClient::PrevEvent()
 {
-    Bool_t status;
-    fBesEventNo--;
-    if ( f_bossMode == false){
-	status = GetEvent(fBesEventNo);
-    }
-    else if ( f_bossMode == true){
-	// add error box
-	this->HandleError("Boss Mode can not get previous event!");
-    }
-    if (!status) fBesEventNo++;
-    return status;
+  Bool_t status;
+  fBesEventNo--;
+  if ( f_bossMode == false){
+    status = GetEvent(fBesEventNo);
+  }
+  else if ( f_bossMode == true){
+    // add error box
+    this->HandleError("Boss Mode can not get previous event!");
+  }
+  if (!status) fBesEventNo++;
+  return status;
 }
 
 //_____________________________________________________
 
 Bool_t BesClient::FirstEvent()
 {
-    Bool_t status;
-    if ( f_bossMode == false){
-	fBesEventNo = 0;
-	status = GetEvent(fBesEventNo);
-    }
-    else if ( f_bossMode == true){
-	// add error box
-	this->HandleError("Boss Mode can not get first event!");
-    }
-    return status;
+  Bool_t status;
+  if ( f_bossMode == false){
+    fBesEventNo = 0;
+    status = GetEvent(fBesEventNo);
+  }
+  else if ( f_bossMode == true){
+    // add error box
+    this->HandleError("Boss Mode can not get first event!");
+  }
+  return status;
 }
 
 //_____________________________________________________
 
 void BesClient::AutoDisplayEvent()
 {
-    //if (fEventTree) {
-    fAutoDisplayEvent = !fAutoDisplayEvent;
-    std::cout << "(AutoDisplayEvent)fAutoDisplayEvent: " << fAutoDisplayEvent << std::endl;
-    if (fAutoDisplayEventTimer) {
-	if (fAutoDisplayEvent) {
-	    fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventStop.gif"));
-	    fAutoDisplayEventTimer->TurnOn();
-	}
-	else {
-	    fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventPlay.gif"));
-	    fAutoDisplayEventTimer->TurnOff();
-	}
+  //if (fEventTree) {
+  fAutoDisplayEvent = !fAutoDisplayEvent;
+  std::cout << "(AutoDisplayEvent)fAutoDisplayEvent: " << fAutoDisplayEvent << std::endl;
+  if (fAutoDisplayEventTimer) {
+    if (fAutoDisplayEvent) {
+      fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventStop.gif"));
+      fAutoDisplayEventTimer->TurnOn();
     }
-    //}
+    else {
+      fPlayEventButton->SetPicture(gClient->GetPicture("ButtonEventPlay.gif"));
+      fAutoDisplayEventTimer->TurnOff();
+    }
+  }
+  //}
 
-    /*
-       fAutoDisplayEvent = kTRUE;
-       if (gDebug) cout << "Into AutoDisplayEvent(), fAutoDisplayEvent = " << fAutoDisplayEvent << " fEventPlaySpeed " << fEventPlaySpeed << endl;
+  /*
+     fAutoDisplayEvent = kTRUE;
+     if (gDebug) cout << "Into AutoDisplayEvent(), fAutoDisplayEvent = " << fAutoDisplayEvent << " fEventPlaySpeed " << fEventPlaySpeed << endl;
 
-       if (fAutoDisplayEventTimer) fAutoDisplayEventTimer->TurnOn();
-       */
+     if (fAutoDisplayEventTimer) fAutoDisplayEventTimer->TurnOn();
+     */
 }
 
 //_____________________________________________________
 
 void BesClient::AutoDisplayEventCommand()
 {
-    NextEvent();
-    UpdateBesInputFields();
+  NextEvent();
+  UpdateBesInputFields();
 }
 
 //_____________________________________________________
 
 void BesClient::AutoRotate()
 {
-    fAutoRotate = !fAutoRotate;
+  fAutoRotate = !fAutoRotate;
 
-    if (!fAutoRotate) {
-	fAutoRotateClockWise = 0;
-	fAutoRotateTheta = 0;
-	fAutoRotatePhi   = 0;
-	fAutoRotatePsi   = 0;
-    }
+  if (!fAutoRotate) {
+    fAutoRotateClockWise = 0;
+    fAutoRotateTheta = 0;
+    fAutoRotatePhi   = 0;
+    fAutoRotatePsi   = 0;
+  }
 
-    if (fAutoRotateTimer) {
-	if (fAutoRotate) fAutoRotateTimer->TurnOn();
-	else fAutoRotateTimer->TurnOff();
-    }
+  if (fAutoRotateTimer) {
+    if (fAutoRotate) fAutoRotateTimer->TurnOn();
+    else fAutoRotateTimer->TurnOff();
+  }
 }
 
 //_____________________________________________________
 
 void BesClient::AutoRotateCommand()
 {
-    if (fAutoRotateClockWise != 0) {
-	RotateClockWise(fAutoRotateClockWise);
-    }
+  if (fAutoRotateClockWise != 0) {
+    RotateClockWise(fAutoRotateClockWise);
+  }
 
-    if (fAutoRotateTheta != 0) {
-	RotateTheta(fAutoRotateTheta);
-    }
+  if (fAutoRotateTheta != 0) {
+    RotateTheta(fAutoRotateTheta);
+  }
 
-    if (fAutoRotatePhi != 0) {
-	RotatePhi(fAutoRotatePhi);
-    }
+  if (fAutoRotatePhi != 0) {
+    RotatePhi(fAutoRotatePhi);
+  }
 
-    if (fAutoRotatePsi != 0) {
-	RotatePsi(fAutoRotatePsi);
-    }
+  if (fAutoRotatePsi != 0) {
+    RotatePsi(fAutoRotatePsi);
+  }
 
-    /*
-       Int_t iret;
-       if (fDisplay->GetPadXY()->GetView()) {
-       fDisplay->GetPadXY()->GetView()->SetView(fDisplay->GetPadXY()->GetView()->GetLongitude()+fRotateStep,
-       fDisplay->GetPadXY()->GetView()->GetLatitude(),
-       fDisplay->GetPadXY()->GetView()->GetPsi(), iret);
-       fDisplay->GetPadXY()->Modified();
-       fDisplay->GetPadXY()->Update();
-       }
-       if (fDisplay->GetPadZR()->GetView()) {
-       fDisplay->GetPadZR()->GetView()->SetView(fDisplay->GetPadZR()->GetView()->GetLongitude()+fRotateStep,
-       fDisplay->GetPadZR()->GetView()->GetLatitude(),
-       fDisplay->GetPadZR()->GetView()->GetPsi(), iret);
-       fDisplay->GetPadZR()->Modified();
-       fDisplay->GetPadZR()->Update();
-       }
-       */
+  /*
+     Int_t iret;
+     if (fDisplay->GetPadXY()->GetView()) {
+     fDisplay->GetPadXY()->GetView()->SetView(fDisplay->GetPadXY()->GetView()->GetLongitude()+fRotateStep,
+     fDisplay->GetPadXY()->GetView()->GetLatitude(),
+     fDisplay->GetPadXY()->GetView()->GetPsi(), iret);
+     fDisplay->GetPadXY()->Modified();
+     fDisplay->GetPadXY()->Update();
+     }
+     if (fDisplay->GetPadZR()->GetView()) {
+     fDisplay->GetPadZR()->GetView()->SetView(fDisplay->GetPadZR()->GetView()->GetLongitude()+fRotateStep,
+     fDisplay->GetPadZR()->GetView()->GetLatitude(),
+     fDisplay->GetPadZR()->GetView()->GetPsi(), iret);
+     fDisplay->GetPadZR()->Modified();
+     fDisplay->GetPadZR()->Update();
+     }
+     */
 
-    UpdateCurrentPad();
-    UpdateBesInputFields();
+  UpdateCurrentPad();
+  UpdateBesInputFields();
 }
 
 //_____________________________________________________
 
 void BesClient::RotateClockWise(int clockwise) // -1 = counterclockwise
 {
-    Double_t phi = 0.0;
-    Int_t    iret;
-    if (fDisplay->GetPadXY()->GetView()) {
-	phi = fDisplay->GetPadXY()->GetView()->GetLongitude();
-	phi += clockwise * fRotateStep;
-	fDisplay->GetPadXY()->GetView()->SetView(phi,
-		fDisplay->GetPadXY()->GetView()->GetLatitude(),
-		fDisplay->GetPadXY()->GetView()->GetPsi(), iret);
-	fDisplay->GetPadXY()->Modified();
-	fDisplay->GetPadXY()->Update();
-    }
-    if (fDisplay->GetPadZR()->GetView()) {
-	//phi = fDisplay->GetPadZR()->GetView()->GetLongitude();
-	//phi += clockwise * fRotateStep;
-	phi += 180.0;
-	fDisplay->GetPadZR()->GetView()->SetView(phi,
-		fDisplay->GetPadZR()->GetView()->GetLatitude(),
-		fDisplay->GetPadZR()->GetView()->GetPsi(), iret);
-	fDisplay->GetPadZR()->Modified();
-	fDisplay->GetPadZR()->Update();
-    }
+  Double_t phi = 0.0;
+  Int_t    iret;
+  if (fDisplay->GetPadXY()->GetView()) {
+    phi = fDisplay->GetPadXY()->GetView()->GetLongitude();
+    phi += clockwise * fRotateStep;
+    fDisplay->GetPadXY()->GetView()->SetView(phi,
+	fDisplay->GetPadXY()->GetView()->GetLatitude(),
+	fDisplay->GetPadXY()->GetView()->GetPsi(), iret);
+    fDisplay->GetPadXY()->Modified();
+    fDisplay->GetPadXY()->Update();
+  }
+  if (fDisplay->GetPadZR()->GetView()) {
+    //phi = fDisplay->GetPadZR()->GetView()->GetLongitude();
+    //phi += clockwise * fRotateStep;
+    phi += 180.0;
+    fDisplay->GetPadZR()->GetView()->SetView(phi,
+	fDisplay->GetPadZR()->GetView()->GetLatitude(),
+	fDisplay->GetPadZR()->GetView()->GetPsi(), iret);
+    fDisplay->GetPadZR()->Modified();
+    fDisplay->GetPadZR()->Update();
+  }
 }
 
 //_____________________________________________________
 
 void BesClient::RotateTheta(int pn) // 1 plus, -1 minus
 {
-    BesView *view = (BesView*)gPad->GetView();
+  BesView *view = (BesView*)gPad->GetView();
 
-    if (view) {
-	Double_t theta = view->GetLatitude() + pn*fRotateStep;
-	Int_t iret;
-	SetRange(theta, 0.0, 180.0);
-	view->SetView(view->GetLongitude(), theta, view->GetPsi(), iret);
-	//gPad->Modified();
-	//gPad->Update();
-    }
+  if (view) {
+    Double_t theta = view->GetLatitude() + pn*fRotateStep;
+    Int_t iret;
+    SetRange(theta, 0.0, 180.0);
+    view->SetView(view->GetLongitude(), theta, view->GetPsi(), iret);
+    //gPad->Modified();
+    //gPad->Update();
+  }
 }
 
 //_____________________________________________________
 
 void BesClient::RotatePhi(int pn) // 1 plus, -1 minus
 {
-    BesView *view = (BesView*)gPad->GetView();
+  BesView *view = (BesView*)gPad->GetView();
 
-    if (view) {
-	Double_t phi = view->GetLongitude() + pn*fRotateStep;
-	Int_t iret;
-	SetRange(phi, 0.0, 360.0);
-	view->SetView(phi, view->GetLatitude(), view->GetPsi(), iret);
-	//gPad->Modified();
-	//gPad->Update();
-    }
+  if (view) {
+    Double_t phi = view->GetLongitude() + pn*fRotateStep;
+    Int_t iret;
+    SetRange(phi, 0.0, 360.0);
+    view->SetView(phi, view->GetLatitude(), view->GetPsi(), iret);
+    //gPad->Modified();
+    //gPad->Update();
+  }
 }
 
 //_____________________________________________________
 
 void BesClient::RotatePsi(int pn) // 1 plus, -1 minus
 {
-    BesView *view = (BesView*)gPad->GetView();
+  BesView *view = (BesView*)gPad->GetView();
 
-    if (view) {
-	Double_t psi = view->GetPsi() + pn*fRotateStep;
-	Int_t iret;
-	SetRange(psi, 0.0, 360.0);
-	view->SetView(view->GetLongitude(), view->GetLatitude(), psi, iret);
-	//gPad->Modified();
-	//gPad->Update();
-    }
+  if (view) {
+    Double_t psi = view->GetPsi() + pn*fRotateStep;
+    Int_t iret;
+    SetRange(psi, 0.0, 360.0);
+    view->SetView(view->GetLongitude(), view->GetLatitude(), psi, iret);
+    //gPad->Modified();
+    //gPad->Update();
+  }
 }
 
 //__________________________________________________________________
 
 void BesClient::HandleEventList(TGListTreeItem *entry, Int_t btn) {
-    //
-    // Event list handling for buttons
+  //
+  // Event list handling for buttons
 
-    if ( entry->GetFirstChild() != 0 ) {
-	// Run folder
-	if ( entry->IsOpen() ) {
-	    fEventListTree->CloseItem(entry);
-	} else {
-	    fEventListTree->OpenItem(entry);
-	}
+  if ( entry->GetFirstChild() != 0 ) {
+    // Run folder
+    if ( entry->IsOpen() ) {
+      fEventListTree->CloseItem(entry);
     } else {
-	fEventListTree->HighlightItem(entry);
-	gClient->NeedRedraw(fEventListTree);
-
-	// Event item
-	fItem = entry;
-	fRunItem = entry->GetParent();
-	TString msg1("Displaying Run ");
-	HandleStatusBar(msg1.Data());
-
-	SetState(); // includes canvas update
-
-	TString msg2("Run ");
-	HandleStatusBar(msg2.Data());
+      fEventListTree->OpenItem(entry);
     }
+  } else {
+    fEventListTree->HighlightItem(entry);
+    gClient->NeedRedraw(fEventListTree);
 
-    // Redraw canvas
-    TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
-    canvas->Modified();
-    canvas->Update();
+    // Event item
+    fItem = entry;
+    fRunItem = entry->GetParent();
+    TString msg1("Displaying Run ");
+    HandleStatusBar(msg1.Data());
+
+    SetState(); // includes canvas update
+
+    TString msg2("Run ");
+    HandleStatusBar(msg2.Data());
+  }
+
+  // Redraw canvas
+  TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
+  canvas->Modified();
+  canvas->Update();
 }
 
 //__________________________________________________________________
 
 void BesClient::ExecuteEvent(Int_t event, Int_t px, Int_t py, TObject *sel) {
+  //
+  // Actions in reponse to mouse button events
+
+  // Get view from current pad
+  if ( !gBesGeometry ) {
+    cout << "there is not BesGeometry" << endl; 	// added by tianhl to debug event
+    return;
+  }
+
+
+  BesView *view = (BesView*)gPad->GetView();
+  TString viewInfo;
+  if (view) viewInfo = TString(view->GetObjectInfo(px, py));
+
+  switch (event) {
+
+    case kKeyPress:
+      // px = char code of pressed key
+      // py = counter
+      if ( py <= 0 ) py = 1; // Reset counter
+      switch ( Char_t(px) ) {
+	case '-':                   // Zoom out
+	case 'k':
+	case 'K':
+	case 'q':
+	case 'Q':
+	  view->ZoomOut();
+	  break;
+	case '+':                   // Zoom in
+	case 'j':
+	case 'J':
+	case 'e':
+	case 'E':
+	  view->ZoomIn();
+	  break;
+	case 'h':                   // Move to the left
+	case 'H':
+	case 'a':
+	case 'A':
+	  view->Move(-10,0);
+	  fEmbeddedCanvas->GetCanvas()->Update();
+	  break;
+	case 'l':                   // Move to the right
+	case 'L':
+	case 'd':
+	case 'D':
+	  view->Move(10,0);
+	  fEmbeddedCanvas->GetCanvas()->Update();
+	  break;
+	case 'u':                   // Move up
+	case 'U':
+	case 'w':
+	case 'W':
+	  view->Move(0,-10);
+	  fEmbeddedCanvas->GetCanvas()->Update();
+	  break;
+	case 'i':                   // Move down
+	case 'I':
+	case 's':
+	case 'S':
+	  view->Move(0,10);
+	  fEmbeddedCanvas->GetCanvas()->Update();
+	  break;
+	case 'n':
+	case 'N':
+	  this->NextEvent();
+	  break;
+	case 'p':
+	case 'P':
+	  this->PrevEvent();
+	  break;
+	case 'g':
+	case 'G':
+	  this->SavePicAs();
+	default:
+	  break;
+      }
+      break;
+
+    default:
+      if ( sel != 0 ) {
+	//if ( !gPad->InheritsFrom("BesCanvas") ) {
+	if ( gPad->GetName() != TString("PadHeader")) {
+	  TString info(sel->GetTitle());
+	  info.Append(": ");
+	  info.Append(sel->GetObjectInfo(px, py));
+	  //info.Append(viewInfo);
+	  HandleInfoBar(info.Data());
+	}
+      }
+      break;
+      }
+
+      UpdateBesInputFields();
+  }
+
+  //__________________________________________________________________
+
+  void BesClient::SetState(Int_t id) {
     //
-    // Actions in reponse to mouse button events
-
-    // Get view from current pad
-    if ( !gBesGeometry ) {
-	cout << "there is not BesGeometry" << endl; 	// added by tianhl to debug event
-	return;
+    // set geometry state and update Canvas
+    if (id == -1) {
+      TGButton *btn = (TGButton *) gTQSender;
+      id = btn->WidgetId();
     }
-
 
     BesView *view = (BesView*)gPad->GetView();
-    TString viewInfo;
-    if (view) viewInfo = TString(view->GetObjectInfo(px, py));
+    if ( view ) {
+      switch (id) {
 
-    switch (event) {
+	case   kM_Header_Global:
+	  break;
 
-	case kKeyPress:
-	    // px = char code of pressed key
-	    // py = counter
-	    if ( py <= 0 ) py = 1; // Reset counter
-	    switch ( Char_t(px) ) {
-		case '-':                   // Zoom out
-		case 'k':
-		case 'K':
-		case 'q':
-		case 'Q':
-		    view->ZoomOut();
-		    break;
-		case '+':                   // Zoom in
-		case 'j':
-		case 'J':
-		case 'e':
-		case 'E':
-		    view->ZoomIn();
-		    break;
-		case 'h':                   // Move to the left
-		case 'H':
-		case 'a':
-		case 'A':
-		    view->Move(-10,0);
-		    fEmbeddedCanvas->GetCanvas()->Update();
-		    break;
-		case 'l':                   // Move to the right
-		case 'L':
-		case 'd':
-		case 'D':
-		    view->Move(10,0);
-		    fEmbeddedCanvas->GetCanvas()->Update();
-		    break;
-		case 'u':                   // Move up
-		case 'U':
-		case 'w':
-		case 'W':
-		    view->Move(0,-10);
-		    fEmbeddedCanvas->GetCanvas()->Update();
-		    break;
-		case 'i':                   // Move down
-		case 'I':
-		case 's':
-		case 'S':
-		    view->Move(0,10);
-		    fEmbeddedCanvas->GetCanvas()->Update();
-		    break;
-		case 'n':
-		case 'N':
-		    this->NextEvent();
-		    break;
-		case 'p':
-		case 'P':
-		    this->PrevEvent();
-		    break;
-		case 'g':
-		case 'G':
-		    this->SavePicAs();
-		default:
-		    break;
-	    }
+	case   kM_Mdc_Global:
+	  view->SetVisMdcGlobal(fChkBtnMdcGlobal->GetState());
+	  //gBesGeometry->GetMdcROOTGeo()->SetDetectorOn();
+	  //cout << "Mdc Global vis " << endl;
+	  break;
+
+	case   kM_Mdc_Tubes:
+	  view->SetVisMdcTubes(fChkBtnMdcTubes->GetState());
+	  //HandleViewOptionMenu(kM_Mdc_Tubes);
+	  break;
+
+	case   kM_Mdc_Wires:
+	  view->SetVisMdcWires(fChkBtnMdcWires->GetState());
+	  //HandleViewOptionMenu(kM_Mdc_Wires);
+	  break;
+
+	case   kM_Tof_Global:
+	  view->SetVisTofGlobal(fChkBtnTofGlobal->GetState());
+	  //cout << "Tof Global vis " << endl;
+	  break;
+
+	case   kM_Tof_East:
+	  view->SetVisTofEast(fChkBtnTofEast->GetState());
+	  break;
+
+	case   kM_Tof_Barrel:
+	  view->SetVisTofBarrel(fChkBtnTofBarrel->GetState());
+	  break;
+
+	case   kM_Tof_West:
+	  view->SetVisTofWest(fChkBtnTofWest->GetState());
+	  break;
+
+	case   kM_Emc_Global:
+	  view->SetVisEmcGlobal(fChkBtnEmcGlobal->GetState());
+	  //cout << "Emc Global vis " << endl;
+	  break;
+
+	case   kM_Emc_East:
+	  view->SetVisEmcEast(fChkBtnEmcEast->GetState());
+	  break;
+
+	case   kM_Emc_Barrel:
+	  view->SetVisEmcBarrel(fChkBtnEmcBarrel->GetState());
+	  break;
+
+	case   kM_Emc_West:
+	  view->SetVisEmcWest(fChkBtnEmcWest->GetState());
+	  break;
+
+	case   kM_Emc_Side:
+	  view->SetVisEmcSide(fChkBtnEmcSide->GetState());
+	  break;
+
+	case   kM_Muc_Global:
+	  view->SetVisMucGlobal(fChkBtnMucGlobal->GetState());
+	  //cout << "Muc Global vis " << endl;
+	  break;
+
+	case   kM_Muc_East:
+	  view->SetVisMucEast(fChkBtnMucEast->GetState());
+	  break;
+
+	case   kM_Muc_Barrel:
+	  view->SetVisMucBarrel(fChkBtnMucBarrel->GetState());
+	  break;
+
+	case   kM_Muc_West:
+	  view->SetVisMucWest(fChkBtnMucWest->GetState());
+	  break;
+
+	case   kM_Muc_Strips:
+	  view->SetVisMucStrips(fChkBtnMucStrips->GetState());
+	  break;
+
+	case   kM_BeamPipe:
+	  view->SetVisBeamPipe(fChkBtnBeamPipe->GetState());
+	  break;
+
+	case   kM_ZRPlaneOnXY:
+	  view->SetVisZRPlaneOnXY(fChkBtnZRPlaneOnXY->GetState());
+	  break;
+
+	case   kM_Axis:
+	  view->SetVisAxis(fChkBtnAxis->GetState());
+	  break;
+
+	case   kM_MdcHits_Global:
+	  view->SetVisMdcHitsGlobal(fChkBtnMdcHitsGlobal->GetState());
+	  break;
+
+	case   kM_TofHits_Global:
+	  view->SetVisTofHitsGlobal(fChkBtnTofHitsGlobal->GetState());
+	  break;
+
+	case   kM_TofHits_East:
+	  view->SetVisTofHitsEast(fChkBtnTofHitsEast->GetState());
+	  break;
+
+	case   kM_TofHits_Barrel:
+	  view->SetVisTofHitsBarrel(fChkBtnTofHitsBarrel->GetState());
+	  break;
+
+	case   kM_TofHits_West:
+	  view->SetVisTofHitsWest(fChkBtnTofHitsWest->GetState());
+	  break;
+
+	case   kM_EmcHits_Global:
+	  view->SetVisEmcHitsGlobal(fChkBtnEmcHitsGlobal->GetState());
+	  break;
+
+	case   kM_EmcHits_East:
+	  view->SetVisEmcHitsEast(fChkBtnEmcHitsEast->GetState());
+	  break;
+
+	case   kM_EmcHits_Barrel:
+	  view->SetVisEmcHitsBarrel(fChkBtnEmcHitsBarrel->GetState());
+	  break;
+
+	case   kM_EmcHits_West:
+	  view->SetVisEmcHitsWest(fChkBtnEmcHitsWest->GetState());
+	  break;
+
+	case   kM_EmcHits_Side:
+	  view->SetVisEmcHitsSide(fChkBtnEmcHitsSide->GetState());
+	  break;
+
+	case   kM_MucHits_Global:
+	  view->SetVisMucHitsGlobal(fChkBtnMucHitsGlobal->GetState());
+	  break;
+
+	case   kM_MucHits_East:
+	  view->SetVisMucHitsEast(fChkBtnMucHitsEast->GetState());
+	  break;
+
+	case   kM_MucHits_Barrel:
+	  view->SetVisMucHitsBarrel(fChkBtnMucHitsBarrel->GetState());
+	  break;
+
+	case   kM_MucHits_West:
+	  view->SetVisMucHitsWest(fChkBtnMucHitsWest->GetState());
+	  break;
+
+	case   kM_Tracks_Global:
+	  view->SetVisTracksGlobal(fChkBtnTracksGlobal->GetState());
+	  break;
+
+	case   kM_Tracks_Mdc:
+	  view->SetVisTracksMdc(fChkBtnTracksMdc->GetState());
+	  break;
+
+	case   kM_Tracks_Tof:
+	  view->SetVisTracksTof(fChkBtnTracksTof->GetState());
+	  break;
+
+	case   kM_Tracks_Emc:
+	  view->SetVisTracksEmc(fChkBtnTracksEmc->GetState());
+	  break;
+
+	case   kM_Tracks_Muc:
+	  view->SetVisTracksMuc(fChkBtnTracksMuc->GetState());
+	  break;
+
+	case   kM_Tracks_Ext:
+	  view->SetVisTracksExt(fChkBtnTracksExt->GetState());
+	  break;
+
+	case   kM_Mdc_TMatch_Global:
+	  this->SetMdcTMatch(fChkBtnMdcTMatchGlobal->GetState());
+	  break;
+
+	case   kM_Mdc_QMatch_Global:
+	  this->SetMdcQMatch(fChkBtnMdcQMatchGlobal->GetState());
+	  break;
+
+	case   kM_Tof_TMatch_Global:
+	  this->SetTofTMatch(fChkBtnTofTMatchGlobal->GetState());
+	  break;
+
+	case   kM_Tof_QMatch_Global:
+	  this->SetTofQMatch(fChkBtnTofQMatchGlobal->GetState());
+	  break;
+      }
+
+      view->UpdateView(0);
+
+      ((TCanvas*)fEmbeddedCanvas->GetCanvas())->Modified();
+      ((TCanvas*)fEmbeddedCanvas->GetCanvas())->Update();
+    }
+
+    UpdateStatus();
+  }
+
+  //_____________________________________________________
+
+  void BesClient::UpdateStatus() {
+    //
+    // get status from active BesView instance
+    BesView *view = (BesView*)gPad->GetView();
+
+    if ( view ) {
+
+      // fish eye tick in zview menu
+      view->SetFishEye(view->GetFishEyeStatus());
+
+      // Mdc global
+      fChkBtnMdcGlobal->SetOn(view->GetVisMdcGlobal());
+
+      // Mdc Tubes
+      fChkBtnMdcTubes->SetOn(view->GetVisMdcTubes());
+
+      // Mdc Wires
+      fChkBtnMdcWires->SetOn(view->GetVisMdcWires());
+
+      // Tof global
+      fChkBtnTofGlobal->SetOn(view->GetVisTofGlobal());
+
+      // Tof east
+      fChkBtnTofEast->SetOn(view->GetVisTofEast());
+
+      // Tof barrel
+      fChkBtnTofBarrel->SetOn(view->GetVisTofBarrel());
+
+      // Tof west
+      fChkBtnTofWest->SetOn(view->GetVisTofWest());
+
+      // Emc global
+      fChkBtnEmcGlobal->SetOn(view->GetVisEmcGlobal());
+
+      // Emc east
+      fChkBtnEmcEast->SetOn(view->GetVisEmcEast());
+
+      // Emc barrel
+      fChkBtnEmcBarrel->SetOn(view->GetVisEmcBarrel());
+
+      // Emc west
+      fChkBtnEmcWest->SetOn(view->GetVisEmcWest());
+
+      // Emc side
+      fChkBtnEmcSide->SetOn(view->GetVisEmcSide());
+
+      // Muc global
+      fChkBtnMucGlobal->SetOn(view->GetVisMucGlobal());
+
+      // Muc east
+      fChkBtnMucEast->SetOn(view->GetVisMucEast());
+
+      // Muc barrel
+      fChkBtnMucBarrel->SetOn(view->GetVisMucBarrel());
+
+      // Muc west
+      fChkBtnMucWest->SetOn(view->GetVisMucWest());
+
+      // Muc strips
+      fChkBtnMucStrips->SetOn(view->GetVisMucStrips());
+
+      // BeamPipe
+      fChkBtnBeamPipe->SetOn(view->GetVisBeamPipe());
+
+      // ZRPlaneOnXY
+      fChkBtnZRPlaneOnXY->SetOn(view->GetVisZRPlaneOnXY());
+
+      // Axis
+      fChkBtnAxis->SetOn(view->GetVisAxis());
+
+      // Mdc Hits global
+      fChkBtnMdcHitsGlobal->SetOn(view->GetVisMdcHitsGlobal());
+
+      // Tof Hits global
+      fChkBtnTofHitsGlobal->SetOn(view->GetVisTofHitsGlobal());
+
+      // Tof Hits east
+      fChkBtnTofHitsEast->SetOn(view->GetVisTofHitsEast());
+
+      // Tof Hits barrel
+      fChkBtnTofHitsBarrel->SetOn(view->GetVisTofHitsBarrel());
+
+      // Tof Hits west
+      fChkBtnTofHitsWest->SetOn(view->GetVisTofHitsWest());
+
+      // Emc Hits global
+      fChkBtnEmcHitsGlobal->SetOn(view->GetVisEmcHitsGlobal());
+
+      // Emc Hits east
+      fChkBtnEmcHitsEast->SetOn(view->GetVisEmcHitsEast());
+
+      // Emc Hits barrel
+      fChkBtnEmcHitsBarrel->SetOn(view->GetVisEmcHitsBarrel());
+
+      // Emc Hits west
+      fChkBtnEmcHitsWest->SetOn(view->GetVisEmcHitsWest());
+
+      // Emc Hits side
+      fChkBtnEmcHitsSide->SetOn(view->GetVisEmcHitsSide());
+
+      // Muc Hits global
+      fChkBtnMucHitsGlobal->SetOn(view->GetVisMucHitsGlobal());
+
+      // Muc Hits east
+      fChkBtnMucHitsEast->SetOn(view->GetVisMucHitsEast());
+
+      // Muc Hits barrel
+      fChkBtnMucHitsBarrel->SetOn(view->GetVisMucHitsBarrel());
+
+      // Muc Hits west
+      fChkBtnMucHitsWest->SetOn(view->GetVisMucHitsWest());
+
+
+      // Tracks global
+      fChkBtnTracksGlobal->SetOn(view->GetVisTracksGlobal());
+
+      // Tracks mdc
+      fChkBtnTracksMdc->SetOn(view->GetVisTracksMdc());
+
+      // Tracks tof
+      fChkBtnTracksTof->SetOn(view->GetVisTracksTof());
+
+      // Tracks emc
+      fChkBtnTracksEmc->SetOn(view->GetVisTracksEmc());
+
+      // Tracks muc
+      fChkBtnTracksMuc->SetOn(view->GetVisTracksMuc());
+
+      // Tracks ext
+      fChkBtnTracksExt->SetOn(view->GetVisTracksExt());
+
+
+      // Mdc Global
+      if ( view->GetVisMdcGlobal() )
+	fMenuViewOptionMdc->CheckEntry(kM_Mdc_Global);
+      else
+	fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Global);
+
+      // Mdc Tubes
+      if ( view->GetVisMdcTubes() )
+	fMenuViewOptionMdc->CheckEntry(kM_Mdc_Tubes);
+      else
+	fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Tubes);
+
+      // Mdc Wires
+      if ( view->GetVisMdcWires() )
+	fMenuViewOptionMdc->CheckEntry(kM_Mdc_Wires);
+      else
+	fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Wires);
+
+      // Tof Global
+      if ( view->GetVisTofGlobal() )
+	fMenuViewOptionTof->CheckEntry(kM_Tof_Global);
+      else
+	fMenuViewOptionTof->UnCheckEntry(kM_Tof_Global);
+
+      // Tof East
+      if ( view->GetVisTofEast() )
+	fMenuViewOptionTof->CheckEntry(kM_Tof_East);
+      else
+	fMenuViewOptionTof->UnCheckEntry(kM_Tof_East);
+
+      // Tof Barrel
+      if ( view->GetVisTofBarrel() )
+	fMenuViewOptionTof->CheckEntry(kM_Tof_Barrel);
+      else
+	fMenuViewOptionTof->UnCheckEntry(kM_Tof_Barrel);
+
+      // Tof West
+      if ( view->GetVisTofWest() )
+	fMenuViewOptionTof->CheckEntry(kM_Tof_West);
+      else
+	fMenuViewOptionTof->UnCheckEntry(kM_Tof_West);
+
+      // Emc Global
+      if ( view->GetVisEmcGlobal() )
+	fMenuViewOptionEmc->CheckEntry(kM_Emc_Global);
+      else
+	fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Global);
+
+      // Emc East
+      if ( view->GetVisEmcEast() )
+	fMenuViewOptionEmc->CheckEntry(kM_Emc_East);
+      else
+	fMenuViewOptionEmc->UnCheckEntry(kM_Emc_East);
+
+      // Emc Barrel
+      if ( view->GetVisEmcBarrel() )
+	fMenuViewOptionEmc->CheckEntry(kM_Emc_Barrel);
+      else
+	fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Barrel);
+
+      // Emc West
+      if ( view->GetVisEmcWest() )
+	fMenuViewOptionEmc->CheckEntry(kM_Emc_West);
+      else
+	fMenuViewOptionEmc->UnCheckEntry(kM_Emc_West);
+
+      // Emc Side
+      if ( view->GetVisEmcSide() )
+	fMenuViewOptionEmc->CheckEntry(kM_Emc_Side);
+      else
+	fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Side);
+
+      // Muc Global
+      if ( view->GetVisMucGlobal() )
+	fMenuViewOptionMuc->CheckEntry(kM_Muc_Global);
+      else
+	fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Global);
+
+      // Muc East
+      if ( view->GetVisMucEast() )
+	fMenuViewOptionMuc->CheckEntry(kM_Muc_East);
+      else
+	fMenuViewOptionMuc->UnCheckEntry(kM_Muc_East);
+
+      // Muc Barrel
+      if ( view->GetVisMucBarrel() )
+	fMenuViewOptionMuc->CheckEntry(kM_Muc_Barrel);
+      else
+	fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Barrel);
+
+      // Muc West
+      if ( view->GetVisMucWest() )
+	fMenuViewOptionMuc->CheckEntry(kM_Muc_West);
+      else
+	fMenuViewOptionMuc->UnCheckEntry(kM_Muc_West);
+
+      // Muc Strips
+      if ( view->GetVisMucStrips() )
+	fMenuViewOptionMuc->CheckEntry(kM_Muc_Strips);
+      else
+	fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Strips);
+
+      // Full3D Mdc
+      if ( view->GetVisFull3DMdc() )
+	fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Mdc);
+      else
+	fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Mdc);
+
+      // Full3D Tof
+      if ( view->GetVisFull3DTof() )
+	fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Tof);
+      else
+	fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Tof);
+
+      // Full3D Emc
+      if ( view->GetVisFull3DEmc() )
+	fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Emc);
+      else
+	fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Emc);
+
+      // Full3D Muc
+      if ( view->GetVisFull3DMuc() )
+	fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Muc);
+      else
+	fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Muc);
+
+      // BeamPipe
+      if ( view->GetVisBeamPipe() )
+	fMenuViewOptionOthers->CheckEntry(kM_BeamPipe);
+      else
+	fMenuViewOptionOthers->UnCheckEntry(kM_BeamPipe);
+
+      // ZRPlaneOnXY
+      if ( view->GetVisZRPlaneOnXY() )
+	fMenuViewOptionOthers->CheckEntry(kM_ZRPlaneOnXY);
+      else
+	fMenuViewOptionOthers->UnCheckEntry(kM_ZRPlaneOnXY);
+
+      // Axis
+      if ( view->GetVisAxis() ) {
+	fMenuViewOptionOthers->CheckEntry(kM_Axis);
+	fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxisST.gif"));
+	fShowAxisButton->SetState(true);
+      }
+      else {
+	fMenuViewOptionOthers->UnCheckEntry(kM_Axis);
+	fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxis.gif"));
+	fShowAxisButton->SetState(false);
+      }
+
+      // Mdc Hits
+      if ( view->GetVisMdcHits() )
+	fMenuViewOptionMdcHits->CheckEntry(kM_MdcHits_Hits);
+      else
+	fMenuViewOptionMdcHits->UnCheckEntry(kM_MdcHits_Hits);
+
+      // Tof hits Global
+      if ( view->GetVisTofHitsGlobal() )
+	fMenuViewOptionTofHits->CheckEntry(kM_TofHits_Global);
+      else
+	fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_Global);
+
+      // Tof hits East
+      if ( view->GetVisTofHitsEast() )
+	fMenuViewOptionTofHits->CheckEntry(kM_TofHits_East);
+      else
+	fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_East);
+
+      // Tof hits Barrel
+      if ( view->GetVisTofHitsBarrel() )
+	fMenuViewOptionTofHits->CheckEntry(kM_TofHits_Barrel);
+      else
+	fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_Barrel);
+
+      // Tof hits West
+      if ( view->GetVisTofHitsWest() )
+	fMenuViewOptionTofHits->CheckEntry(kM_TofHits_West);
+      else
+	fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_West);
+
+      // Emc hits Global
+      if ( view->GetVisEmcHitsGlobal() )
+	fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Global);
+      else
+	fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Global);
+
+      // Emc hits East
+      if ( view->GetVisEmcHitsEast() )
+	fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_East);
+      else
+	fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_East);
+
+      // Emc hits Barrel
+      if ( view->GetVisEmcHitsBarrel() )
+	fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Barrel);
+      else
+	fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Barrel);
+
+      // Emc hits West
+      if ( view->GetVisEmcHitsWest() )
+	fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_West);
+      else
+	fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_West);
+
+      // Emc hits Side
+      if ( view->GetVisEmcHitsSide() )
+	fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Side);
+      else
+	fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Side);
+
+      // Muc hits Global
+      if ( view->GetVisMucHitsGlobal() )
+	fMenuViewOptionMucHits->CheckEntry(kM_MucHits_Global);
+      else
+	fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_Global);
+
+      // Muc hits East
+      if ( view->GetVisMucHitsEast() )
+	fMenuViewOptionMucHits->CheckEntry(kM_MucHits_East);
+      else
+	fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_East);
+
+      // Muc hits Barrel
+      if ( view->GetVisMucHitsBarrel() )
+	fMenuViewOptionMucHits->CheckEntry(kM_MucHits_Barrel);
+      else
+	fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_Barrel);
+
+      // Muc hits West
+      if ( view->GetVisMucHitsWest() )
+	fMenuViewOptionMucHits->CheckEntry(kM_MucHits_West);
+      else
+	fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_West);
+
+      // Tracks Global
+      if ( view->GetVisTracksGlobal() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Global);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Global);
+
+      // Tracks Mdc
+      if ( view->GetVisTracksMdc() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Mdc);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Mdc);
+
+      // Tracks Tof
+      if ( view->GetVisTracksTof() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Tof);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Tof);
+
+      // Tracks Emc
+      if ( view->GetVisTracksEmc() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Emc);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Emc);
+
+      // Tracks Muc
+      if ( view->GetVisTracksMuc() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Muc);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Muc);
+
+      // Tracks Ext
+      if ( view->GetVisTracksExt() )
+	fMenuViewOptionTracks->CheckEntry(kM_Tracks_Ext);
+      else
+	fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Ext);
+
+      // Fish Eye View
+      if ( view->GetFishEye() ) {
+	fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeViewST.gif"));
+      }
+      else {
+	fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeView.gif"));
+      }
+
+      // Parallel or Perspective View
+      if ( view->IsPerspective() ) {
+	fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelView.gif"));
+	fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveViewST.gif"));
+      }
+      else {
+	fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelViewST.gif"));
+	fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveView.gif"));
+      }
+    }
+    UpdateBesInputFields();
+  }
+
+  //__________________________________________________________________
+
+  void BesClient::HandleButtons(Int_t id) {
+    //
+    // Handle different buttons
+    if (id == -1) {
+      TGButton *btn = (TGButton *) gTQSender;
+      id = btn->WidgetId();
+    }
+
+    //TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
+    TString query = "";
+    Int_t displayMode = 0;
+
+    Double_t xmin=0.0, ymin=0.0, xmax=0.0, ymax=0.0;
+    if (gPad) {
+      xmin = gPad->GetX1();
+      ymin = gPad->GetY1();
+      xmax = gPad->GetX2();
+      ymax = gPad->GetY2();
+    }
+
+    BesView *view = 0;
+    if (gPad) view = (BesView*)gPad->GetView();
+    Int_t iret;
+    //Double_t theta, phi, psi;
+
+    switch ( id ) {
+
+      case kM_Button_LoadGeoFile:  // Load geometry file
+	LoadGeoFile();
+	fLoadGeoFileButton->SetPicture(gClient->GetPicture("ButtonLoadGeoFile.gif"));
+	break;
+
+      case kM_Button_OpenEventFile:  // Load event file
+	OpenEventFile();
+	fOpenEventFileButton->SetPicture(gClient->GetPicture("ButtonOpenEventFile.gif"));
+	break;
+
+      case kM_Button_SavePicAs:  // Save picture as
+	SavePicAs();
+	fSavePicAsButton->SetPicture(gClient->GetPicture("ButtonSavePicAs.gif"));
+	break;
+
+      case kM_Button_SavePicAsPS:  // Save picture as *.ps
+	fSavePicAsPSButton->SetPicture(gClient->GetPicture("ButtonSavePicAsPSHL.gif"));
+	//SavePicAsPS();
+	fEmbeddedCanvas->GetCanvas()->Print("besvis.ps", "ps");
+	fSavePicAsPSButton->SetPicture(gClient->GetPicture("ButtonSavePicAsPS.gif"));
+	break;
+
+      case kM_Button_Refresh:  // Refresh all pads
+	//fDisplay->SwitchDisplayMode(fDisplay->GetDisplayMode());
+	//UpdateAllView();
+	if (view) view->UpdateView(0);
+	break;
+
+      case kM_Button_ResetCurrent:  // reset active pad to default
+	if (view) view->Reset();
+	break;
+
+      case kM_Button_ResetAll:  // Reset all pads to Default
+	if (view) fDisplay->Reset();
+	break;
+
+      case kM_Button_CursorPick:  // Cursor Pick
+	gBesCursor->SetType(kBesPick);
+	fCursorButton[0]->SetPicture(gClient->GetPicture("ButtonCursorPickST.gif"));
+	fCursorButton[0]->SetState(true);
+	fCursorButton[1]->SetPicture(gClient->GetPicture("ButtonCursorHand.gif"));
+	fCursorButton[1]->SetState(false);
+	//fCursorButton[0]->SetState(kButtonEngaged);
+	//fCursorButton[1]->SetState(kButtonUp);
+	break;
+
+      case kM_Button_CursorHand:  // Cursor Hand
+	gBesCursor->SetType(kBesHand);
+	fCursorButton[0]->SetPicture(gClient->GetPicture("ButtonCursorPick.gif"));
+	fCursorButton[0]->SetState(false);
+	fCursorButton[1]->SetPicture(gClient->GetPicture("ButtonCursorHandST.gif"));
+	fCursorButton[1]->SetState(true);
+	break;
+
+      case kM_Button_ZoomOut:  // Zoom out
+	if (view) view->ZoomOut();
+	break;
+
+      case kM_Button_ZoomIn:  // Zoom in
+	if (view) view->ZoomIn();
+	break;
+
+      case kM_Button_SetHome: // Set Home position
+	SetHome();
+	break;
+
+      case kM_Button_GoHome: // Go Home position
+	GoHome();
+	break;
+
+      case kM_Button_SaveMyConfig:
+	SaveMyConfig();
+	fSaveMyConfigButton->SetPicture(gClient->GetPicture("ButtonSaveMyConfig.gif"));
+	break;
+
+      case kM_Button_LoadMyConfig:
+	LoadMyConfig();
+	fLoadMyConfigButton->SetPicture(gClient->GetPicture("ButtonLoadMyConfig.gif"));
+	break;
+
+      case kM_Button_Help:
+	Help();
+	break;
+
+      case kM_Button_ShowInfo: // Show Info
+	gBesCursor->SetShowInfo(!gBesCursor->GetShowInfo());
+	if (gBesCursor->GetShowInfo()) {
+	  fShowInfoButton->SetState(true);
+	  fShowInfoButton->SetPicture(gClient->GetPicture("ButtonShowInfoST.gif"));
+	}
+	else {
+	  fShowInfoButton->SetState(false);
+	  fShowInfoButton->SetPicture(gClient->GetPicture("ButtonShowInfo.gif"));
+	}
+	break;
+
+      case kM_Button_ShowAxis: // Show Axis
+	if (view) {
+	  view->SetVisAxis(!view->GetVisAxis());
+	  if (view->GetVisAxis()) {
+	    fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxisST.gif"));
+	    fShowAxisButton->SetState(true);
+	  }
+	  else {
+	    fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxis.gif"));
+	    fShowAxisButton->SetState(false);
+	  }
+	  view->UpdateView(0);
+	}
+	break;
+
+      case kM_Button_FishEyeView: // FishEye View
+	if (view) {
+	  view->SetFishEye(!view->GetFishEye());
+	  if (view->GetFishEye()) {
+	    fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeViewST.gif"));
+	    fFishEyeViewButton->SetState(true);
+	  }
+	  else {
+	    fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeView.gif"));
+	    fFishEyeViewButton->SetState(false);
+	  }
+	}
+	break;
+
+      case kM_Button_ParallelView: // Parallel View
+	if (view && view->IsPerspective()) {
+	  fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelViewST.gif"));
+	  fParallelViewButton->SetState(true);
+	  fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveView.gif"));
+	  fPerspectiveViewButton->SetState(false);
+	  //view->SetParralel();
+	  view->SetParallel();
+	  // use SetParallel() instead of depreciated function SetParralel()
+	  // changed by tianhl at Mon Aug 20 2007
+	  view->UpdateView(0);
+	}
+	break;
+
+      case kM_Button_PerspectiveView: // Perspective View
+	if (view && !view->IsPerspective()) {
+	  fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelView.gif"));
+	  fParallelViewButton->SetState(false);
+	  fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveViewST.gif"));
+	  fPerspectiveViewButton->SetState(true);
+	  view->SetPerspective();
+	  view->UpdateView(0);
+	}
+	break;
+
+      case kM_Button_X3D: // X3D
+	X3D();
+	fX3DButton->SetPicture(gClient->GetPicture("ButtonX3D.gif"));
+	break;
+
+      case kM_Button_OpenGL: // OpenGL
+	OpenGL();
+	fOpenGLButton->SetPicture(gClient->GetPicture("ButtonOpenGL.gif"));
+	break;
+
+      case kM_Button_NextEvent:
+	NextEvent();
+	break;
+
+      case kM_Button_PrevEvent:
+	PrevEvent();
+	break;
+
+      case kM_Button_PlayEvent:
+	AutoDisplayEvent();
+	break;
+
+      case kM_Button_FirstEvent:
+	FirstEvent();
+	break;
+
+      case kM_Button_ViewResetAngle:
+	if (view->GetViewType() == k3DView) view->Front();
+	if (view->GetViewType() == kXYView) view->SetView(  0,  0, 270, iret);
+	if (view->GetViewType() == kZRView) view->SetView(180, 90,  90, iret);
+	break;
+
+      case kM_Button_ViewCounterClockWise:
+	RotateClockWise(-1);
+	if (fAutoRotate) {
+	  if (fAutoRotateClockWise != -1) {
+	    fAutoRotateClockWise = -1;
+	    fAutoRotatePhi = 0;
+	  }
+	  else fAutoRotateClockWise = 0;
+	}
+	break;
+
+      case kM_Button_ViewClockWise:
+	RotateClockWise(1);
+	if (fAutoRotate) {
+	  if (fAutoRotateClockWise != 1) {
+	    fAutoRotateClockWise = 1;
+	    fAutoRotatePhi = 0;
+	  }
+	  else fAutoRotateClockWise = 0;
+	}
+	break;
+
+      case kM_Button_ViewMoveUp:
+	view->Move(0,10);
+	//if (gPad) gPad->Range(xmin, ymin+fMoveFactor*(ymax-ymin), xmax, ymax+fMoveFactor*(ymax-ymin));
+	break;
+
+      case kM_Button_ViewMoveDown:
+	view->Move(0,-10);
+	break;
+
+      case kM_Button_ViewMoveLeft:
+	view->Move(-10,0);
+	break;
+
+      case kM_Button_ViewMoveRight:
+	view->Move(10,0);
+	break;
+
+      case kM_Button_ViewMoveCenter:
+	view->Center();
+	break;
+
+      case kM_Button_ViewAngleThetaPlus:
+	RotateTheta(1);
+	if (fAutoRotate) {
+	  if (fAutoRotateTheta != 1) fAutoRotateTheta = 1;
+	  else fAutoRotateTheta = 0;
+	}
+	break;
+
+      case kM_Button_ViewAngleThetaMinus:
+	RotateTheta(-1);
+	if (fAutoRotate) {
+	  if (fAutoRotateTheta != -1) fAutoRotateTheta = -1;
+	  else fAutoRotateTheta = 0;
+	}
+	break;
+
+      case kM_Button_ViewAnglePhiPlus:
+	RotatePhi(1);
+	if (fAutoRotate) {
+	  if (fAutoRotatePhi != 1) {
+	    fAutoRotatePhi = 1;
+	    fAutoRotateClockWise = 0;
+	  }
+	  else fAutoRotatePhi = 0;
+	}
+	break;
+
+      case kM_Button_ViewAnglePhiMinus:
+	RotatePhi(-1);
+	if (fAutoRotate) {
+	  if (fAutoRotatePhi != -1) {
+	    fAutoRotatePhi = -1;
+	    fAutoRotateClockWise = 0;
+	  }
+	  else fAutoRotatePhi = 0;
+	}
+	break;
+
+      case kM_Button_ViewAnglePsiPlus:
+	if (view->GetViewType() == k3DView) {
+	  RotatePsi(1);
+	  if (fAutoRotate) {
+	    if (fAutoRotatePsi != 1) fAutoRotatePsi = 1;
+	    else fAutoRotatePsi = 0;
+	  }
+	}
+	break;
+
+      case kM_Button_ViewAnglePsiMinus:
+	if (view->GetViewType() == k3DView) {
+	  RotatePsi(-1);
+	  if (fAutoRotate) {
+	    if (fAutoRotatePsi != -1) fAutoRotatePsi = -1;
+	    else fAutoRotatePsi = 0;
+	  }
+	}
+	break;
+
+      case kM_Button_AutoRotate:
+	AutoRotate();
+	break;
+
+      case kM_Button_DisplayMode2D:
+	SetAllDisplayModeButtonUnHL();
+	fDisplayModeButton[0]->SetState(true);
+	fDisplayModeButton[0]->SetPicture(gClient->GetPicture("DisplayMode2DST.gif"));
+	fDisplay->SwitchDisplayMode(0);
+	break;
+
+      case kM_Button_DisplayModeXY:
+	SetAllDisplayModeButtonUnHL();
+	fDisplayModeButton[1]->SetState(true);
+	fDisplayModeButton[1]->SetPicture(gClient->GetPicture("DisplayModeXYST.gif"));
+	fDisplay->SwitchDisplayMode(1);
+	break;
+
+      case kM_Button_DisplayModeZR:
+	SetAllDisplayModeButtonUnHL();
+	fDisplayModeButton[2]->SetState(true);
+	fDisplayModeButton[2]->SetPicture(gClient->GetPicture("DisplayModeZRST.gif"));
+	fDisplay->SwitchDisplayMode(2);
+	break;
+
+      case kM_Button_DisplayMode3D:
+	SetAllDisplayModeButtonUnHL();
+	fDisplayModeButton[3]->SetState(true);
+	fDisplayModeButton[3]->SetPicture(gClient->GetPicture("DisplayMode3DST.gif"));
+	fDisplay->SwitchDisplayMode(3);
+	break;
+
+      case kM_Button_DisplayModeAll:
+	SetAllDisplayModeButtonUnHL();
+	fDisplayModeButton[4]->SetState(true);
+	fDisplayModeButton[4]->SetPicture(gClient->GetPicture("DisplayModeAllST.gif"));
+	fDisplay->SwitchDisplayMode(4);
+	break;
+
+      case kM_Button_SwitchDisplayMode:
+	displayMode = fDisplay->GetDisplayMode();
+	displayMode++;
+	if (displayMode >= 5) displayMode -= 5;
+	fDisplay->SwitchDisplayMode(displayMode);
+
+	SetAllDisplayModeButtonUnHL();
+	switch (displayMode) {
+	  case 0 :
+	    fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayMode2DST.gif"));
 	    break;
-
-	default:
-	    if ( sel != 0 ) {
-		//if ( !gPad->InheritsFrom("BesCanvas") ) {
-		if ( gPad->GetName() != TString("PadHeader")) {
-		    TString info(sel->GetTitle());
-		    info.Append(": ");
-		    info.Append(sel->GetObjectInfo(px, py));
-		    //info.Append(viewInfo);
-		    HandleInfoBar(info.Data());
-		}
-	    }
+	  case 1 :
+	    fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeXYST.gif"));
 	    break;
-	    }
+	  case 2 :
+	    fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeZRST.gif"));
+	    break;
+	  case 3 :
+	    fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayMode3DST.gif"));
+	    break;
+	  case 4 :
+	    fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeAllST.gif"));
+	    break;
+	  default:
+	    break;
+	}
+	break;
 
-	    UpdateBesInputFields();
+      case kM_Button_SwitchPad:
+	fDisplay->SwitchPad();
+	break;
     }
 
-    //__________________________________________________________________
+    UpdateStatus();
+    UpdateCurrentPad();
+    UpdateBesInputFields();
+  }
 
-    void BesClient::SetState(Int_t id) {
-	//
-	// set geometry state and update Canvas
-	if (id == -1) {
-	    TGButton *btn = (TGButton *) gTQSender;
-	    id = btn->WidgetId();
+  //__________________________________________________________________
+
+  void BesClient::HandleSliders(Int_t slider)
+  {
+    //
+    // Handle slider events
+    if (gDebug) cout << "BesClient::DoSlider called!" << endl;
+
+    TGButton *btn = (TGButton *) gTQSender;
+    Int_t id = btn->WidgetId();
+
+    BesView *view = (BesView*)gPad->GetView();
+    Int_t iret;
+
+    switch (id) {
+
+      case kM_Slider_EventPlay:
+	fEventPlaySlider->SetPosition(slider);
+	if (fEventTree) {
+	  fBesEventNo = slider;
+	  this->GetEvent(fBesEventNo);
 	}
+	break;
 
-	BesView *view = (BesView*)gPad->GetView();
-	if ( view ) {
-	    switch (id) {
-
-		case   kM_Header_Global:
-		    break;
-
-		case   kM_Mdc_Global:
-		    view->SetVisMdcGlobal(fChkBtnMdcGlobal->GetState());
-		    //gBesGeometry->GetMdcROOTGeo()->SetDetectorOn();
-		    //cout << "Mdc Global vis " << endl;
-		    break;
-
-		case   kM_Mdc_Tubes:
-		    view->SetVisMdcTubes(fChkBtnMdcTubes->GetState());
-		    //HandleViewOptionMenu(kM_Mdc_Tubes);
-		    break;
-
-		case   kM_Mdc_Wires:
-		    view->SetVisMdcWires(fChkBtnMdcWires->GetState());
-		    //HandleViewOptionMenu(kM_Mdc_Wires);
-		    break;
-
-		case   kM_Tof_Global:
-		    view->SetVisTofGlobal(fChkBtnTofGlobal->GetState());
-		    //cout << "Tof Global vis " << endl;
-		    break;
-
-		case   kM_Tof_East:
-		    view->SetVisTofEast(fChkBtnTofEast->GetState());
-		    break;
-
-		case   kM_Tof_Barrel:
-		    view->SetVisTofBarrel(fChkBtnTofBarrel->GetState());
-		    break;
-
-		case   kM_Tof_West:
-		    view->SetVisTofWest(fChkBtnTofWest->GetState());
-		    break;
-
-		case   kM_Emc_Global:
-		    view->SetVisEmcGlobal(fChkBtnEmcGlobal->GetState());
-		    //cout << "Emc Global vis " << endl;
-		    break;
-
-		case   kM_Emc_East:
-		    view->SetVisEmcEast(fChkBtnEmcEast->GetState());
-		    break;
-
-		case   kM_Emc_Barrel:
-		    view->SetVisEmcBarrel(fChkBtnEmcBarrel->GetState());
-		    break;
-
-		case   kM_Emc_West:
-		    view->SetVisEmcWest(fChkBtnEmcWest->GetState());
-		    break;
-
-		case   kM_Emc_Side:
-		    view->SetVisEmcSide(fChkBtnEmcSide->GetState());
-		    break;
-
-		case   kM_Muc_Global:
-		    view->SetVisMucGlobal(fChkBtnMucGlobal->GetState());
-		    //cout << "Muc Global vis " << endl;
-		    break;
-
-		case   kM_Muc_East:
-		    view->SetVisMucEast(fChkBtnMucEast->GetState());
-		    break;
-
-		case   kM_Muc_Barrel:
-		    view->SetVisMucBarrel(fChkBtnMucBarrel->GetState());
-		    break;
-
-		case   kM_Muc_West:
-		    view->SetVisMucWest(fChkBtnMucWest->GetState());
-		    break;
-
-		case   kM_Muc_Strips:
-		    view->SetVisMucStrips(fChkBtnMucStrips->GetState());
-		    break;
-
-		case   kM_BeamPipe:
-		    view->SetVisBeamPipe(fChkBtnBeamPipe->GetState());
-		    break;
-
-		case   kM_ZRPlaneOnXY:
-		    view->SetVisZRPlaneOnXY(fChkBtnZRPlaneOnXY->GetState());
-		    break;
-
-		case   kM_Axis:
-		    view->SetVisAxis(fChkBtnAxis->GetState());
-		    break;
-
-		case   kM_MdcHits_Global:
-		    view->SetVisMdcHitsGlobal(fChkBtnMdcHitsGlobal->GetState());
-		    break;
-
-		case   kM_TofHits_Global:
-		    view->SetVisTofHitsGlobal(fChkBtnTofHitsGlobal->GetState());
-		    break;
-
-		case   kM_TofHits_East:
-		    view->SetVisTofHitsEast(fChkBtnTofHitsEast->GetState());
-		    break;
-
-		case   kM_TofHits_Barrel:
-		    view->SetVisTofHitsBarrel(fChkBtnTofHitsBarrel->GetState());
-		    break;
-
-		case   kM_TofHits_West:
-		    view->SetVisTofHitsWest(fChkBtnTofHitsWest->GetState());
-		    break;
-
-		case   kM_EmcHits_Global:
-		    view->SetVisEmcHitsGlobal(fChkBtnEmcHitsGlobal->GetState());
-		    break;
-
-		case   kM_EmcHits_East:
-		    view->SetVisEmcHitsEast(fChkBtnEmcHitsEast->GetState());
-		    break;
-
-		case   kM_EmcHits_Barrel:
-		    view->SetVisEmcHitsBarrel(fChkBtnEmcHitsBarrel->GetState());
-		    break;
-
-		case   kM_EmcHits_West:
-		    view->SetVisEmcHitsWest(fChkBtnEmcHitsWest->GetState());
-		    break;
-
-		case   kM_EmcHits_Side:
-		    view->SetVisEmcHitsSide(fChkBtnEmcHitsSide->GetState());
-		    break;
-
-		case   kM_MucHits_Global:
-		    view->SetVisMucHitsGlobal(fChkBtnMucHitsGlobal->GetState());
-		    break;
-
-		case   kM_MucHits_East:
-		    view->SetVisMucHitsEast(fChkBtnMucHitsEast->GetState());
-		    break;
-
-		case   kM_MucHits_Barrel:
-		    view->SetVisMucHitsBarrel(fChkBtnMucHitsBarrel->GetState());
-		    break;
-
-		case   kM_MucHits_West:
-		    view->SetVisMucHitsWest(fChkBtnMucHitsWest->GetState());
-		    break;
-
-		case   kM_Tracks_Global:
-		    view->SetVisTracksGlobal(fChkBtnTracksGlobal->GetState());
-		    break;
-
-		case   kM_Tracks_Mdc:
-		    view->SetVisTracksMdc(fChkBtnTracksMdc->GetState());
-		    break;
-
-		case   kM_Tracks_Tof:
-		    view->SetVisTracksTof(fChkBtnTracksTof->GetState());
-		    break;
-
-		case   kM_Tracks_Emc:
-		    view->SetVisTracksEmc(fChkBtnTracksEmc->GetState());
-		    break;
-
-		case   kM_Tracks_Muc:
-		    view->SetVisTracksMuc(fChkBtnTracksMuc->GetState());
-		    break;
-
-		case   kM_Tracks_Ext:
-		    view->SetVisTracksExt(fChkBtnTracksExt->GetState());
-		    break;
-
-		case   kM_Mdc_TMatch_Global:
-		    this->SetMdcTFire(fChkBtnMdcTMatchGlobal->GetState());
-		    break;
-
-		case   kM_Mdc_QMatch_Global:
-		    this->SetMdcQFire(fChkBtnMdcQMatchGlobal->GetState());
-		    break;
-
-		    //case   kM_Mdc_TOverflow_Global:
-		    //  this->SetMdcTOverflow(fChkBtnMdcTOverflowGlobal->GetState());
-		    //  break;
-
-		case   kM_Mdc_QNotOverflow_Global:
-		    this->SetMdcQNotOverflow(fChkBtnMdcQOverflowGlobal->GetState());
-		    break;
-
-		case   kM_Mdc_ColorfulWire_Global:
-		    this->SetMdcColorfulWire(fChkBtnMdcColorfulWireGlobal->GetState());
-		    break;
-
-		case   kM_Mdc_MdcTimeSubEvTime_Global:
-		    this->SetMdcTimeSubEvTime(fChkBtnMdcTimeSubEvTimeGlobal->GetState());
-		    break;
-
-		case   kM_Tof_TMatch_Global:
-		    this->SetTofTMatch(fChkBtnTofTMatchGlobal->GetState());
-		    break;
-
-		case   kM_Tof_QMatch_Global:
-		    this->SetTofQMatch(fChkBtnTofQMatchGlobal->GetState());
-		    break;
-	    }
-
-
-	    view->UpdateView(0);
-
-	    ((TCanvas*)fEmbeddedCanvas->GetCanvas())->Modified();
-	    ((TCanvas*)fEmbeddedCanvas->GetCanvas())->Update();
-	}
-
-	UpdateStatus();
-    }
-
-    //_____________________________________________________
-
-    void BesClient::UpdateStatus() {
-	//
-	// get status from active BesView instance
-	BesView *view = (BesView*)gPad->GetView();
-
-	if ( view ) {
-	    fZoomRatioNumber->SetNumber(view->GetStatusCurrent()->fZoom*100.0);//yzhang
-	    view->SetZoomRatio(view->GetStatusCurrent()->fZoom);//yzhang
-
-	    // fish eye tick in zview menu
-	    view->SetFishEye(view->GetFishEyeStatus());
-
-	    // Mdc global
-	    fChkBtnMdcGlobal->SetOn(view->GetVisMdcGlobal());
-
-	    // Mdc Tubes
-	    fChkBtnMdcTubes->SetOn(view->GetVisMdcTubes());
-
-	    // Mdc Wires
-	    fChkBtnMdcWires->SetOn(view->GetVisMdcWires());
-
-	    // Tof global
-	    fChkBtnTofGlobal->SetOn(view->GetVisTofGlobal());
-
-	    // Tof east
-	    fChkBtnTofEast->SetOn(view->GetVisTofEast());
-
-	    // Tof barrel
-	    fChkBtnTofBarrel->SetOn(view->GetVisTofBarrel());
-
-	    // Tof west
-	    fChkBtnTofWest->SetOn(view->GetVisTofWest());
-
-	    // Emc global
-	    fChkBtnEmcGlobal->SetOn(view->GetVisEmcGlobal());
-
-	    // Emc east
-	    fChkBtnEmcEast->SetOn(view->GetVisEmcEast());
-
-	    // Emc barrel
-	    fChkBtnEmcBarrel->SetOn(view->GetVisEmcBarrel());
-
-	    // Emc west
-	    fChkBtnEmcWest->SetOn(view->GetVisEmcWest());
-
-	    // Emc side
-	    fChkBtnEmcSide->SetOn(view->GetVisEmcSide());
-
-	    // Muc global
-	    fChkBtnMucGlobal->SetOn(view->GetVisMucGlobal());
-
-	    // Muc east
-	    fChkBtnMucEast->SetOn(view->GetVisMucEast());
-
-	    // Muc barrel
-	    fChkBtnMucBarrel->SetOn(view->GetVisMucBarrel());
-
-	    // Muc west
-	    fChkBtnMucWest->SetOn(view->GetVisMucWest());
-
-	    // Muc strips
-	    fChkBtnMucStrips->SetOn(view->GetVisMucStrips());
-
-	    // BeamPipe
-	    fChkBtnBeamPipe->SetOn(view->GetVisBeamPipe());
-
-	    // ZRPlaneOnXY
-	    fChkBtnZRPlaneOnXY->SetOn(view->GetVisZRPlaneOnXY());
-
-	    // Axis
-	    fChkBtnAxis->SetOn(view->GetVisAxis());
-
-	    // Mdc Hits global
-	    fChkBtnMdcHitsGlobal->SetOn(view->GetVisMdcHitsGlobal());
-
-	    // Tof Hits global
-	    fChkBtnTofHitsGlobal->SetOn(view->GetVisTofHitsGlobal());
-
-	    // Tof Hits east
-	    fChkBtnTofHitsEast->SetOn(view->GetVisTofHitsEast());
-
-	    // Tof Hits barrel
-	    fChkBtnTofHitsBarrel->SetOn(view->GetVisTofHitsBarrel());
-
-	    // Tof Hits west
-	    fChkBtnTofHitsWest->SetOn(view->GetVisTofHitsWest());
-
-	    // Emc Hits global
-	    fChkBtnEmcHitsGlobal->SetOn(view->GetVisEmcHitsGlobal());
-
-	    // Emc Hits east
-	    fChkBtnEmcHitsEast->SetOn(view->GetVisEmcHitsEast());
-
-	    // Emc Hits barrel
-	    fChkBtnEmcHitsBarrel->SetOn(view->GetVisEmcHitsBarrel());
-
-	    // Emc Hits west
-	    fChkBtnEmcHitsWest->SetOn(view->GetVisEmcHitsWest());
-
-	    // Emc Hits side
-	    fChkBtnEmcHitsSide->SetOn(view->GetVisEmcHitsSide());
-
-	    // Muc Hits global
-	    fChkBtnMucHitsGlobal->SetOn(view->GetVisMucHitsGlobal());
-
-	    // Muc Hits east
-	    fChkBtnMucHitsEast->SetOn(view->GetVisMucHitsEast());
-
-	    // Muc Hits barrel
-	    fChkBtnMucHitsBarrel->SetOn(view->GetVisMucHitsBarrel());
-
-	    // Muc Hits west
-	    fChkBtnMucHitsWest->SetOn(view->GetVisMucHitsWest());
-
-
-	    // Tracks global
-	    fChkBtnTracksGlobal->SetOn(view->GetVisTracksGlobal());
-
-	    // Tracks mdc
-	    fChkBtnTracksMdc->SetOn(view->GetVisTracksMdc());
-
-	    // Tracks tof
-	    fChkBtnTracksTof->SetOn(view->GetVisTracksTof());
-
-	    // Tracks emc
-	    fChkBtnTracksEmc->SetOn(view->GetVisTracksEmc());
-
-	    // Tracks muc
-	    fChkBtnTracksMuc->SetOn(view->GetVisTracksMuc());
-
-	    // Tracks ext
-	    fChkBtnTracksExt->SetOn(view->GetVisTracksExt());
-
-
-	    // Mdc Global
-	    if ( view->GetVisMdcGlobal() )
-		fMenuViewOptionMdc->CheckEntry(kM_Mdc_Global);
-	    else
-		fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Global);
-
-	    // Mdc Tubes
-	    if ( view->GetVisMdcTubes() )
-		fMenuViewOptionMdc->CheckEntry(kM_Mdc_Tubes);
-	    else
-		fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Tubes);
-
-	    // Mdc Wires
-	    if ( view->GetVisMdcWires() )
-		fMenuViewOptionMdc->CheckEntry(kM_Mdc_Wires);
-	    else
-		fMenuViewOptionMdc->UnCheckEntry(kM_Mdc_Wires);
-
-	    // Tof Global
-	    if ( view->GetVisTofGlobal() )
-		fMenuViewOptionTof->CheckEntry(kM_Tof_Global);
-	    else
-		fMenuViewOptionTof->UnCheckEntry(kM_Tof_Global);
-
-	    // Tof East
-	    if ( view->GetVisTofEast() )
-		fMenuViewOptionTof->CheckEntry(kM_Tof_East);
-	    else
-		fMenuViewOptionTof->UnCheckEntry(kM_Tof_East);
-
-	    // Tof Barrel
-	    if ( view->GetVisTofBarrel() )
-		fMenuViewOptionTof->CheckEntry(kM_Tof_Barrel);
-	    else
-		fMenuViewOptionTof->UnCheckEntry(kM_Tof_Barrel);
-
-	    // Tof West
-	    if ( view->GetVisTofWest() )
-		fMenuViewOptionTof->CheckEntry(kM_Tof_West);
-	    else
-		fMenuViewOptionTof->UnCheckEntry(kM_Tof_West);
-
-	    // Emc Global
-	    if ( view->GetVisEmcGlobal() )
-		fMenuViewOptionEmc->CheckEntry(kM_Emc_Global);
-	    else
-		fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Global);
-
-	    // Emc East
-	    if ( view->GetVisEmcEast() )
-		fMenuViewOptionEmc->CheckEntry(kM_Emc_East);
-	    else
-		fMenuViewOptionEmc->UnCheckEntry(kM_Emc_East);
-
-	    // Emc Barrel
-	    if ( view->GetVisEmcBarrel() )
-		fMenuViewOptionEmc->CheckEntry(kM_Emc_Barrel);
-	    else
-		fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Barrel);
-
-	    // Emc West
-	    if ( view->GetVisEmcWest() )
-		fMenuViewOptionEmc->CheckEntry(kM_Emc_West);
-	    else
-		fMenuViewOptionEmc->UnCheckEntry(kM_Emc_West);
-
-	    // Emc Side
-	    if ( view->GetVisEmcSide() )
-		fMenuViewOptionEmc->CheckEntry(kM_Emc_Side);
-	    else
-		fMenuViewOptionEmc->UnCheckEntry(kM_Emc_Side);
-
-	    // Muc Global
-	    if ( view->GetVisMucGlobal() )
-		fMenuViewOptionMuc->CheckEntry(kM_Muc_Global);
-	    else
-		fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Global);
-
-	    // Muc East
-	    if ( view->GetVisMucEast() )
-		fMenuViewOptionMuc->CheckEntry(kM_Muc_East);
-	    else
-		fMenuViewOptionMuc->UnCheckEntry(kM_Muc_East);
-
-	    // Muc Barrel
-	    if ( view->GetVisMucBarrel() )
-		fMenuViewOptionMuc->CheckEntry(kM_Muc_Barrel);
-	    else
-		fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Barrel);
-
-	    // Muc West
-	    if ( view->GetVisMucWest() )
-		fMenuViewOptionMuc->CheckEntry(kM_Muc_West);
-	    else
-		fMenuViewOptionMuc->UnCheckEntry(kM_Muc_West);
-
-	    // Muc Strips
-	    if ( view->GetVisMucStrips() )
-		fMenuViewOptionMuc->CheckEntry(kM_Muc_Strips);
-	    else
-		fMenuViewOptionMuc->UnCheckEntry(kM_Muc_Strips);
-
-	    // Full3D Mdc
-	    if ( view->GetVisFull3DMdc() )
-		fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Mdc);
-	    else
-		fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Mdc);
-
-	    // Full3D Tof
-	    if ( view->GetVisFull3DTof() )
-		fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Tof);
-	    else
-		fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Tof);
-
-	    // Full3D Emc
-	    if ( view->GetVisFull3DEmc() )
-		fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Emc);
-	    else
-		fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Emc);
-
-	    // Full3D Muc
-	    if ( view->GetVisFull3DMuc() )
-		fMenuViewOptionFull3D->CheckEntry(kM_Full3D_Muc);
-	    else
-		fMenuViewOptionFull3D->UnCheckEntry(kM_Full3D_Muc);
-
-	    // BeamPipe
-	    if ( view->GetVisBeamPipe() )
-		fMenuViewOptionOthers->CheckEntry(kM_BeamPipe);
-	    else
-		fMenuViewOptionOthers->UnCheckEntry(kM_BeamPipe);
-
-	    // ZRPlaneOnXY
-	    if ( view->GetVisZRPlaneOnXY() )
-		fMenuViewOptionOthers->CheckEntry(kM_ZRPlaneOnXY);
-	    else
-		fMenuViewOptionOthers->UnCheckEntry(kM_ZRPlaneOnXY);
-
-	    // Axis
-	    if ( view->GetVisAxis() ) {
-		fMenuViewOptionOthers->CheckEntry(kM_Axis);
-		fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxisST.gif"));
-		fShowAxisButton->SetState(true);
-	    }
-	    else {
-		fMenuViewOptionOthers->UnCheckEntry(kM_Axis);
-		fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxis.gif"));
-		fShowAxisButton->SetState(false);
-	    }
-
-	    // Mdc Hits
-	    if ( view->GetVisMdcHits() )
-		fMenuViewOptionMdcHits->CheckEntry(kM_MdcHits_Hits);
-	    else
-		fMenuViewOptionMdcHits->UnCheckEntry(kM_MdcHits_Hits);
-
-	    // Tof hits Global
-	    if ( view->GetVisTofHitsGlobal() )
-		fMenuViewOptionTofHits->CheckEntry(kM_TofHits_Global);
-	    else
-		fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_Global);
-
-	    // Tof hits East
-	    if ( view->GetVisTofHitsEast() )
-		fMenuViewOptionTofHits->CheckEntry(kM_TofHits_East);
-	    else
-		fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_East);
-
-	    // Tof hits Barrel
-	    if ( view->GetVisTofHitsBarrel() )
-		fMenuViewOptionTofHits->CheckEntry(kM_TofHits_Barrel);
-	    else
-		fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_Barrel);
-
-	    // Tof hits West
-	    if ( view->GetVisTofHitsWest() )
-		fMenuViewOptionTofHits->CheckEntry(kM_TofHits_West);
-	    else
-		fMenuViewOptionTofHits->UnCheckEntry(kM_TofHits_West);
-
-	    // Emc hits Global
-	    if ( view->GetVisEmcHitsGlobal() )
-		fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Global);
-	    else
-		fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Global);
-
-	    // Emc hits East
-	    if ( view->GetVisEmcHitsEast() )
-		fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_East);
-	    else
-		fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_East);
-
-	    // Emc hits Barrel
-	    if ( view->GetVisEmcHitsBarrel() )
-		fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Barrel);
-	    else
-		fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Barrel);
-
-	    // Emc hits West
-	    if ( view->GetVisEmcHitsWest() )
-		fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_West);
-	    else
-		fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_West);
-
-	    // Emc hits Side
-	    if ( view->GetVisEmcHitsSide() )
-		fMenuViewOptionEmcHits->CheckEntry(kM_EmcHits_Side);
-	    else
-		fMenuViewOptionEmcHits->UnCheckEntry(kM_EmcHits_Side);
-
-	    // Muc hits Global
-	    if ( view->GetVisMucHitsGlobal() )
-		fMenuViewOptionMucHits->CheckEntry(kM_MucHits_Global);
-	    else
-		fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_Global);
-
-	    // Muc hits East
-	    if ( view->GetVisMucHitsEast() )
-		fMenuViewOptionMucHits->CheckEntry(kM_MucHits_East);
-	    else
-		fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_East);
-
-	    // Muc hits Barrel
-	    if ( view->GetVisMucHitsBarrel() )
-		fMenuViewOptionMucHits->CheckEntry(kM_MucHits_Barrel);
-	    else
-		fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_Barrel);
-
-	    // Muc hits West
-	    if ( view->GetVisMucHitsWest() )
-		fMenuViewOptionMucHits->CheckEntry(kM_MucHits_West);
-	    else
-		fMenuViewOptionMucHits->UnCheckEntry(kM_MucHits_West);
-
-	    // Tracks Global
-	    if ( view->GetVisTracksGlobal() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Global);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Global);
-
-	    // Tracks Mdc
-	    if ( view->GetVisTracksMdc() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Mdc);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Mdc);
-
-	    // Tracks Tof
-	    if ( view->GetVisTracksTof() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Tof);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Tof);
-
-	    // Tracks Emc
-	    if ( view->GetVisTracksEmc() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Emc);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Emc);
-
-	    // Tracks Muc
-	    if ( view->GetVisTracksMuc() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Muc);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Muc);
-
-	    // Tracks Ext
-	    if ( view->GetVisTracksExt() )
-		fMenuViewOptionTracks->CheckEntry(kM_Tracks_Ext);
-	    else
-		fMenuViewOptionTracks->UnCheckEntry(kM_Tracks_Ext);
-
-	    // Fish Eye View
-	    if ( view->GetFishEye() ) {
-		fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeViewST.gif"));
-	    }
-	    else {
-		fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeView.gif"));
-	    }
-
-	    // Parallel or Perspective View
-	    if ( view->IsPerspective() ) {
-		fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelView.gif"));
-		fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveViewST.gif"));
-	    }
-	    else {
-		fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelViewST.gif"));
-		fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveView.gif"));
-	    }
-	}
-	UpdateBesInputFields();
-    }
-
-    //__________________________________________________________________
-
-    void BesClient::HandleButtons(Int_t id) {
-	//
-	// Handle different buttons
-	if (id == -1) {
-	    TGButton *btn = (TGButton *) gTQSender;
-	    id = btn->WidgetId();
-	}
-
-	//TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
-	TString query = "";
-	Int_t displayMode = 0;
-
-	Double_t xmin=0.0, ymin=0.0, xmax=0.0, ymax=0.0;
-	if (gPad) {
-	    xmin = gPad->GetX1();
-	    ymin = gPad->GetY1();
-	    xmax = gPad->GetX2();
-	    ymax = gPad->GetY2();
-	}
-
-	BesView *view = 0;
-	if (gPad) view = (BesView*)gPad->GetView();
-	Int_t iret;
-	//Double_t theta, phi, psi;
-
-	switch ( id ) {
-
-	    case kM_Button_LoadGeoFile:  // Load geometry file
-		LoadGeoFile();
-		fLoadGeoFileButton->SetPicture(gClient->GetPicture("ButtonLoadGeoFile.gif"));
-		break;
-
-	    case kM_Button_OpenEventFile:  // Load event file
-		OpenEventFile();
-		fOpenEventFileButton->SetPicture(gClient->GetPicture("ButtonOpenEventFile.gif"));
-		break;
-
-	    case kM_Button_SavePicAs:  // Save picture as
-		SavePicAs();
-		fSavePicAsButton->SetPicture(gClient->GetPicture("ButtonSavePicAs.gif"));
-		break;
-
-	    case kM_Button_SavePicAsPS:  // Save picture as *.ps
-		fSavePicAsPSButton->SetPicture(gClient->GetPicture("ButtonSavePicAsPSHL.gif"));
-		//SavePicAsPS();
-		fEmbeddedCanvas->GetCanvas()->Print("besvis.ps", "ps");
-		fSavePicAsPSButton->SetPicture(gClient->GetPicture("ButtonSavePicAsPS.gif"));
-		break;
-
-	    case kM_Button_Refresh:  // Refresh all pads
-		//fDisplay->SwitchDisplayMode(fDisplay->GetDisplayMode());
-		//UpdateAllView();
-		if (view) view->UpdateView(0);
-		break;
-
-	    case kM_Button_ResetCurrent:  // reset active pad to default
-		if (view) view->Reset();
-		break;
-
-	    case kM_Button_ResetAll:  // Reset all pads to Default
-		if (view) fDisplay->Reset();
-		break;
-
-	    case kM_Button_CursorPick:  // Cursor Pick
-		gBesCursor->SetType(kBesPick);
-		fCursorButton[0]->SetPicture(gClient->GetPicture("ButtonCursorPickST.gif"));
-		fCursorButton[0]->SetState(true);
-		fCursorButton[1]->SetPicture(gClient->GetPicture("ButtonCursorHand.gif"));
-		fCursorButton[1]->SetState(false);
-		//fCursorButton[0]->SetState(kButtonEngaged);
-		//fCursorButton[1]->SetState(kButtonUp);
-		break;
-
-	    case kM_Button_CursorHand:  // Cursor Hand
-		gBesCursor->SetType(kBesHand);
-		fCursorButton[0]->SetPicture(gClient->GetPicture("ButtonCursorPick.gif"));
-		fCursorButton[0]->SetState(false);
-		fCursorButton[1]->SetPicture(gClient->GetPicture("ButtonCursorHandST.gif"));
-		fCursorButton[1]->SetState(true);
-		break;
-
-	    case kM_Button_ZoomOut:  // Zoom out
-		if (view) view->ZoomOut();
-		break;
-
-	    case kM_Button_ZoomIn:  // Zoom in
-		if (view) view->ZoomIn();
-		break;
-
-	    case kM_Button_SetHome: // Set Home position
-		SetHome();
-		break;
-
-	    case kM_Button_GoHome: // Go Home position
-		GoHome();
-		break;
-
-	    case kM_Button_SaveMyConfig:
-		SaveMyConfig();
-		fSaveMyConfigButton->SetPicture(gClient->GetPicture("ButtonSaveMyConfig.gif"));
-		break;
-
-	    case kM_Button_LoadMyConfig:
-		LoadMyConfig();
-		fLoadMyConfigButton->SetPicture(gClient->GetPicture("ButtonLoadMyConfig.gif"));
-		break;
-
-	    case kM_Button_Palette:
-		LoadMdcPalette();
-		fPaletteButton->SetPicture(gClient->GetPicture("ButtonPalette.gif"));
-		break;
-
-	    case kM_Button_Help:
-		Help();
-		break;
-
-	    case kM_Button_ShowInfo: // Show Info
-		gBesCursor->SetShowInfo(!gBesCursor->GetShowInfo());
-		if (gBesCursor->GetShowInfo()) {
-		    fShowInfoButton->SetState(true);
-		    fShowInfoButton->SetPicture(gClient->GetPicture("ButtonShowInfoST.gif"));
-		}
-		else {
-		    fShowInfoButton->SetState(false);
-		    fShowInfoButton->SetPicture(gClient->GetPicture("ButtonShowInfo.gif"));
-		}
-		break;
-
-	    case kM_Button_ShowAxis: // Show Axis
-		if (view) {
-		    view->SetVisAxis(!view->GetVisAxis());
-		    if (view->GetVisAxis()) {
-			fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxisST.gif"));
-			fShowAxisButton->SetState(true);
-		    }
-		    else {
-			fShowAxisButton->SetPicture(gClient->GetPicture("ButtonShowAxis.gif"));
-			fShowAxisButton->SetState(false);
-		    }
-		    view->UpdateView(0);
-		}
-		break;
-
-	    case kM_Button_FishEyeView: // FishEye View
-		if (view) {
-		    view->SetFishEye(!view->GetFishEye());
-		    if (view->GetFishEye()) {
-			fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeViewST.gif"));
-			fFishEyeViewButton->SetState(true);
-		    }
-		    else {
-			fFishEyeViewButton->SetPicture(gClient->GetPicture("ButtonFishEyeView.gif"));
-			fFishEyeViewButton->SetState(false);
-		    }
-		}
-		break;
-
-	    case kM_Button_ParallelView: // Parallel View
-		if (view && view->IsPerspective()) {
-		    fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelViewST.gif"));
-		    fParallelViewButton->SetState(true);
-		    fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveView.gif"));
-		    fPerspectiveViewButton->SetState(false);
-		    //view->SetParralel();
-		    view->SetParallel();
-		    // use SetParallel() instead of depreciated function SetParralel()
-		    // changed by tianhl at Mon Aug 20 2007
-		    view->UpdateView(0);
-		}
-		break;
-
-	    case kM_Button_PerspectiveView: // Perspective View
-		if (view && !view->IsPerspective()) {
-		    fParallelViewButton->SetPicture(gClient->GetPicture("ButtonParallelView.gif"));
-		    fParallelViewButton->SetState(false);
-		    fPerspectiveViewButton->SetPicture(gClient->GetPicture("ButtonPerspectiveViewST.gif"));
-		    fPerspectiveViewButton->SetState(true);
-		    view->SetPerspective();
-		    view->UpdateView(0);
-		}
-		break;
-
-	    case kM_Button_X3D: // X3D
-		X3D();
-		fX3DButton->SetPicture(gClient->GetPicture("ButtonX3D.gif"));
-		break;
-
-	    case kM_Button_OpenGL: // OpenGL
-		OpenGL();
-		fOpenGLButton->SetPicture(gClient->GetPicture("ButtonOpenGL.gif"));
-		break;
-
-	    case kM_Button_NextEvent:
-		NextEvent();
-		break;
-
-	    case kM_Button_PrevEvent:
-		PrevEvent();
-		break;
-
-	    case kM_Button_PlayEvent:
-		AutoDisplayEvent();
-		break;
-
-	    case kM_Button_FirstEvent:
-		FirstEvent();
-		break;
-
-	    case kM_Button_ViewResetAngle:
-		if (view->GetViewType() == k3DView) view->Front();
-		if (view->GetViewType() == kXYView) view->SetView(  0,  0, 270, iret);
-		if (view->GetViewType() == kZRView) view->SetView(180, 90,  90, iret);
-		break;
-
-	    case kM_Button_ViewCounterClockWise:
-		RotateClockWise(-1);
-		if (fAutoRotate) {
-		    if (fAutoRotateClockWise != -1) {
-			fAutoRotateClockWise = -1;
-			fAutoRotatePhi = 0;
-		    }
-		    else fAutoRotateClockWise = 0;
-		}
-		break;
-
-	    case kM_Button_ViewClockWise:
-		RotateClockWise(1);
-		if (fAutoRotate) {
-		    if (fAutoRotateClockWise != 1) {
-			fAutoRotateClockWise = 1;
-			fAutoRotatePhi = 0;
-		    }
-		    else fAutoRotateClockWise = 0;
-		}
-		break;
-
-	    case kM_Button_ViewMoveUp:
-		view->Move(0,10);
-		//if (gPad) gPad->Range(xmin, ymin+fMoveFactor*(ymax-ymin), xmax, ymax+fMoveFactor*(ymax-ymin));
-		break;
-
-	    case kM_Button_ViewMoveDown:
-		view->Move(0,-10);
-		break;
-
-	    case kM_Button_ViewMoveLeft:
-		view->Move(-10,0);
-		break;
-
-	    case kM_Button_ViewMoveRight:
-		view->Move(10,0);
-		break;
-
-	    case kM_Button_ViewMoveCenter:
-		view->Center();
-		break;
-
-	    case kM_Button_ViewAngleThetaPlus:
-		RotateTheta(1);
-		if (fAutoRotate) {
-		    if (fAutoRotateTheta != 1) fAutoRotateTheta = 1;
-		    else fAutoRotateTheta = 0;
-		}
-		break;
-
-	    case kM_Button_ViewAngleThetaMinus:
-		RotateTheta(-1);
-		if (fAutoRotate) {
-		    if (fAutoRotateTheta != -1) fAutoRotateTheta = -1;
-		    else fAutoRotateTheta = 0;
-		}
-		break;
-
-	    case kM_Button_ViewAnglePhiPlus:
-		RotatePhi(1);
-		if (fAutoRotate) {
-		    if (fAutoRotatePhi != 1) {
-			fAutoRotatePhi = 1;
-			fAutoRotateClockWise = 0;
-		    }
-		    else fAutoRotatePhi = 0;
-		}
-		break;
-
-	    case kM_Button_ViewAnglePhiMinus:
-		RotatePhi(-1);
-		if (fAutoRotate) {
-		    if (fAutoRotatePhi != -1) {
-			fAutoRotatePhi = -1;
-			fAutoRotateClockWise = 0;
-		    }
-		    else fAutoRotatePhi = 0;
-		}
-		break;
-
-	    case kM_Button_ViewAnglePsiPlus:
-		if (view->GetViewType() == k3DView) {
-		    RotatePsi(1);
-		    if (fAutoRotate) {
-			if (fAutoRotatePsi != 1) fAutoRotatePsi = 1;
-			else fAutoRotatePsi = 0;
-		    }
-		}
-		break;
-
-	    case kM_Button_ViewAnglePsiMinus:
-		if (view->GetViewType() == k3DView) {
-		    RotatePsi(-1);
-		    if (fAutoRotate) {
-			if (fAutoRotatePsi != -1) fAutoRotatePsi = -1;
-			else fAutoRotatePsi = 0;
-		    }
-		}
-		break;
-
-	    case kM_Button_AutoRotate:
-		AutoRotate();
-		break;
-
-	    case kM_Button_DisplayMode2D:
-		SetAllDisplayModeButtonUnHL();
-		fDisplayModeButton[0]->SetState(true);
-		fDisplayModeButton[0]->SetPicture(gClient->GetPicture("DisplayMode2DST.gif"));
-		fDisplay->SwitchDisplayMode(0);
-		break;
-
-	    case kM_Button_DisplayModeXY:
-		SetAllDisplayModeButtonUnHL();
-		fDisplayModeButton[1]->SetState(true);
-		fDisplayModeButton[1]->SetPicture(gClient->GetPicture("DisplayModeXYST.gif"));
-		fDisplay->SwitchDisplayMode(1);
-		break;
-
-	    case kM_Button_DisplayModeZR:
-		SetAllDisplayModeButtonUnHL();
-		fDisplayModeButton[2]->SetState(true);
-		fDisplayModeButton[2]->SetPicture(gClient->GetPicture("DisplayModeZRST.gif"));
-		fDisplay->SwitchDisplayMode(2);
-		break;
-
-	    case kM_Button_DisplayMode3D:
-		SetAllDisplayModeButtonUnHL();
-		fDisplayModeButton[3]->SetState(true);
-		fDisplayModeButton[3]->SetPicture(gClient->GetPicture("DisplayMode3DST.gif"));
-		fDisplay->SwitchDisplayMode(3);
-		break;
-
-	    case kM_Button_DisplayModeAll:
-		SetAllDisplayModeButtonUnHL();
-		fDisplayModeButton[4]->SetState(true);
-		fDisplayModeButton[4]->SetPicture(gClient->GetPicture("DisplayModeAllST.gif"));
-		fDisplay->SwitchDisplayMode(4);
-		break;
-
-	    case kM_Button_SwitchDisplayMode:
-		displayMode = fDisplay->GetDisplayMode();
-		displayMode++;
-		if (displayMode >= 5) displayMode -= 5;
-		fDisplay->SwitchDisplayMode(displayMode);
-
-		SetAllDisplayModeButtonUnHL();
-		switch (displayMode) {
-		    case 0 :
-			fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayMode2DST.gif"));
-			break;
-		    case 1 :
-			fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeXYST.gif"));
-			break;
-		    case 2 :
-			fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeZRST.gif"));
-			break;
-		    case 3 :
-			fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayMode3DST.gif"));
-			break;
-		    case 4 :
-			fDisplayModeButton[displayMode]->SetPicture(gClient->GetPicture("DisplayModeAllST.gif"));
-			break;
-		    default:
-			break;
-		}
-		break;
-
-	    case kM_Button_SwitchPad:
-		fDisplay->SwitchPad();
-		break;
-	}
-
-	UpdateStatus();
-	UpdateCurrentPad();
-	UpdateBesInputFields();
-    }
-
-    //__________________________________________________________________
-
-    void BesClient::HandleSliders(Int_t slider)
-    {
-	//
-	// Handle slider events
-	if (gDebug) cout << "BesClient::DoSlider called!" << endl;
-
-	TGButton *btn = (TGButton *) gTQSender;
-	Int_t id = btn->WidgetId();
-
-	BesView *view = (BesView*)gPad->GetView();
-	Int_t iret;
-
-	switch (id) {
-
-	    case kM_Slider_EventPlay:
-		fEventPlaySlider->SetPosition(slider);
-		if (fEventTree) {
-		    fBesEventNo = slider;
-		    this->GetEvent(fBesEventNo);
-		}
-		break;
-
-	    case kM_Slider_ViewAngleTheta:
-		if (view) {
-		    view->SetView(view->GetLongitude(), slider, view->GetPsi(), iret);
-		}
-		break;
-
-	    case kM_Slider_ViewAnglePhi:
-		if (view) {
-		    view->SetView(slider, view->GetLatitude(), view->GetPsi(), iret);
-		}
-		break;
-
-	    case kM_Slider_ViewAnglePsi:
-		if (view && view->GetViewType() == k3DView) {
-		    view->SetView(view->GetLongitude(), view->GetLatitude(), slider, iret);
-		}
-		break;
-	}
-
-	UpdateCurrentPad();
-	UpdateBesInputFields();
-    }
-
-    //_________________________________________________________________
-
-    void BesClient::UpdateAllView()
-    {
-	TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
-	TPad *curPad = (TPad*)gPad;//canvas->GetSelectedPad();
-
-	fDisplay->GetPadXY()->cd();
-	BesView *view = (BesView*)fDisplay->GetPadXY()->GetView();
+      case kM_Slider_ViewAngleTheta:
 	if (view) {
-	    view->UpdateView(0);
-	    cout << "update xy view" << endl;
+	  view->SetView(view->GetLongitude(), slider, view->GetPsi(), iret);
 	}
-	else cout << "no xy view" << endl;
+	break;
 
-	fDisplay->GetPadZR()->cd();
-	view = (BesView*)fDisplay->GetPadZR()->GetView();
+      case kM_Slider_ViewAnglePhi:
 	if (view) {
-	    view->UpdateView(0);
-	    cout << "update zr view" << endl;
+	  view->SetView(slider, view->GetLatitude(), view->GetPsi(), iret);
 	}
-	else cout << "no zr view" << endl;
+	break;
 
-	fDisplay->GetPad3D()->cd();
-	view = (BesView*)fDisplay->GetPad3D()->GetView();
-	if (view) {
-	    view->UpdateView(0);
-	    cout << "update 3d view" << endl;
+      case kM_Slider_ViewAnglePsi:
+	if (view && view->GetViewType() == k3DView) {
+	  view->SetView(view->GetLongitude(), view->GetLatitude(), slider, iret);
 	}
-	else cout << "no 3d view" << endl;
-
-	// Header show be drawn last, as it will update all pads and makes tracks in pad drawn first
-	fDisplay->DrawHeader();
-
-	curPad->cd();
-
-	UpdateBesInputFields();
-
-	// Redraw canvas
-	canvas->Modified();
-	canvas->Update();
+	break;
     }
 
-    //_________________________________________________________________
+    UpdateCurrentPad();
+    UpdateBesInputFields();
+  }
 
-    void BesClient::UpdateCurrentPad()
-    {
-	if (gPad) {
-	    gPad->Modified();
-	    gPad->Update();
-	}
+  //_________________________________________________________________
 
-	//BesView *view = (BesView*)gPad->GetView();
+  void BesClient::UpdateAllView()
+  {
+    TCanvas *canvas = (TCanvas*)fEmbeddedCanvas->GetCanvas();
+    TPad *curPad = (TPad*)gPad;//canvas->GetSelectedPad();
 
-	//TViewerX3D *x3d = 0;
-	//x3d = (TViewerX3D*)gPad->GetViewer3D();
-	//if (fViewer3DMode == 1 && view && x3d) {
-	//    x3d->ExecCommand(Int_t(2*view->GetLatitude()), Int_t(2*view->GetLongitude()), 0);  //rotate
-	//}
+    fDisplay->GetPadXY()->cd();
+    BesView *view = (BesView*)fDisplay->GetPadXY()->GetView();
+    if (view) {
+      view->UpdateView(0);
+      cout << "update xy view" << endl;
+    }
+    else cout << "no xy view" << endl;
 
-	////TViewerOpenGL *ogl = 0;
-	////ogl = (TViewerOpenGL*)gPad->GetViewer3D();
-	//// update from 4.04 to 5.14
-	//TVirtualViewer3D *ogl = 0;
-	//ogl = (TVirtualViewer3D*)gPad->GetViewer3D("ogl");
-	//if (fViewer3DMode == 2 && view && ogl) {
-	//    gVirtualGL->ClearGLColor(0.0,0.0,0.0,0.0);   // set GL background color
-	//    gVirtualGL->SetGLLineWidth(5);
+    fDisplay->GetPadZR()->cd();
+    view = (BesView*)fDisplay->GetPadZR()->GetView();
+    if (view) {
+      view->UpdateView(0);
+      cout << "update zr view" << endl;
+    }
+    else cout << "no zr view" << endl;
 
-	//    Double_t deltaTheta = view->GetLatitude()  - fViewThetaPreStep;
-	//    Double_t deltaPhi   = view->GetLongitude() - fViewPhiPreStep;
-	//    if (deltaTheta >  90.0)  deltaTheta -= 180.0;
-	//    if (deltaTheta < -90.0)  deltaTheta += 180.0;
-	//    if (deltaPhi   >  180.0) deltaPhi   -= 360.0;
-	//    if (deltaPhi   < -180.0) deltaPhi   += 360.0;
+    fDisplay->GetPad3D()->cd();
+    view = (BesView*)fDisplay->GetPad3D()->GetView();
+    if (view) {
+      view->UpdateView(0);
+      cout << "update 3d view" << endl;
+    }
+    else cout << "no 3d view" << endl;
 
-	//    // update from 4.04 to 5.14, TViewerOpenGL has been removed,
-	//    // TVirtualViewer3D has none those memthods
-	//    //UInt_t width = ogl->GetWidth();
-	//    //UInt_t height = ogl->GetHeight();
-	//    //UInt_t xPos = width/2, yPos = height/2;
+    // Header show be drawn last, as it will update all pads and makes tracks in pad drawn first
+    fDisplay->DrawHeader();
 
-	//    //Event_t *event1 = new Event_t;
-	//    //event1->fType = kButtonPress;
-	//    //event1->fX = xPos; //(Int_t)view->GetLatitude();
-	//    //event1->fY = yPos; //(Int_t)view->GetLongitude();
-	//    //event1->fCode = kButton1;
-	//    //ogl->HandleContainerButton(event1);
+    curPad->cd();
 
+    UpdateBesInputFields();
 
-	//    //Event_t *event2 = new Event_t;
-	//    //event2->fType = kMotionNotify;
-	//    //event2->fX = (Int_t)(xPos + deltaTheta);
-	//    //event2->fY = (Int_t)(yPos + deltaPhi);
-	//    //ogl->HandleContainerMotion(event2);
+    // Redraw canvas
+    canvas->Modified();
+    canvas->Update();
+  }
 
-	//    //Event_t *event3 = new Event_t;
-	//    //event3->fType = kButtonRelease;
-	//    //event3->fX = (Int_t)(xPos + deltaTheta); //(view->GetLatitude()  + deltaPhi);
-	//    //event3->fY = (Int_t)(yPos + deltaPhi); //(view->GetLongitude() + deltaTheta);
-	//    //event3->fCode = kButton1;
-	//    //ogl->HandleContainerButton(event3);
+  //_________________________________________________________________
 
-	//    //fViewThetaPreStep = view->GetLatitude();
-	//    //fViewPhiPreStep   = view->GetLongitude();
-
-	//    //delete event1;
-	//    //delete event2;
-	//    //delete event3;
-	//}
+  void BesClient::UpdateCurrentPad()
+  {
+    if (gPad) {
+      gPad->Modified();
+      gPad->Update();
     }
 
-    //_________________________________________________________________
+    //BesView *view = (BesView*)gPad->GetView();
 
-    void BesClient::UpdateBesInputFields()
-    {
-	fNumEntryRunNo->SetNumber(GetBesRunNo());
-	fNumEntryEventNo->SetIntNumber(GetBesEventNo());
-	fNumEntryEventPlaySpeed->SetNumber(Double_t(GetEventPlaySpeed()) / 1000.0);
-	fEventPlaySlider->SetPosition(GetBesEventNo());
+    //TViewerX3D *x3d = 0;
+    //x3d = (TViewerX3D*)gPad->GetViewer3D();
+    //if (fViewer3DMode == 1 && view && x3d) {
+    //    x3d->ExecCommand(Int_t(2*view->GetLatitude()), Int_t(2*view->GetLongitude()), 0);  //rotate
+    //}
 
-	fNumEntryRotateStep->SetNumber(GetRotateStep());
-	fNumEntryRotateSpeed->SetNumber(GetRotateSpeed());
-	fNumEntryRotateFPS->SetIntNumber(GetRotateFPS());
+    ////TViewerOpenGL *ogl = 0;
+    ////ogl = (TViewerOpenGL*)gPad->GetViewer3D();
+    //// update from 4.04 to 5.14
+    //TVirtualViewer3D *ogl = 0;
+    //ogl = (TVirtualViewer3D*)gPad->GetViewer3D("ogl");
+    //if (fViewer3DMode == 2 && view && ogl) {
+    //    gVirtualGL->ClearGLColor(0.0,0.0,0.0,0.0);   // set GL background color
+    //    gVirtualGL->SetGLLineWidth(5);
 
-	BesView *view = (BesView*)gPad->GetView();
-	if (view) {
-	    fZoomRatioNumber->SetNumber(view->GetZoomRatio()*100.0);
+    //    Double_t deltaTheta = view->GetLatitude()  - fViewThetaPreStep;
+    //    Double_t deltaPhi   = view->GetLongitude() - fViewPhiPreStep;
+    //    if (deltaTheta >  90.0)  deltaTheta -= 180.0;
+    //    if (deltaTheta < -90.0)  deltaTheta += 180.0;
+    //    if (deltaPhi   >  180.0) deltaPhi   -= 360.0;
+    //    if (deltaPhi   < -180.0) deltaPhi   += 360.0;
 
-	    Double_t theta = view->GetLatitude();
-	    Double_t phi   = view->GetLongitude();
-	    Double_t psi   = view->GetPsi();
-	    SetRange(theta, 0.0, 180.0);
-	    SetRange(phi,   0.0, 360.0);
-	    SetRange(psi,   0.0, 360.0);
-	    fViewAngleThetaNumber->SetNumber(theta);
-	    fViewAnglePhiNumber->SetNumber(phi);
-	    fViewAnglePsiNumber->SetNumber(psi);
-	}
-	fViewAngleThetaSlider->SetPosition((Int_t)fViewAngleThetaNumber->GetNumber());
-	fViewAnglePhiSlider->SetPosition((Int_t)fViewAnglePhiNumber->GetNumber());
-	fViewAnglePsiSlider->SetPosition((Int_t)fViewAnglePsiNumber->GetNumber());
+    //    // update from 4.04 to 5.14, TViewerOpenGL has been removed,
+    //    // TVirtualViewer3D has none those memthods
+    //    //UInt_t width = ogl->GetWidth();
+    //    //UInt_t height = ogl->GetHeight();
+    //    //UInt_t xPos = width/2, yPos = height/2;
 
-	fChkBtnAutoRotate->SetOn(fAutoRotate);
+    //    //Event_t *event1 = new Event_t;
+    //    //event1->fType = kButtonPress;
+    //    //event1->fX = xPos; //(Int_t)view->GetLatitude();
+    //    //event1->fY = yPos; //(Int_t)view->GetLongitude();
+    //    //event1->fCode = kButton1;
+    //    //ogl->HandleContainerButton(event1);
+
+
+    //    //Event_t *event2 = new Event_t;
+    //    //event2->fType = kMotionNotify;
+    //    //event2->fX = (Int_t)(xPos + deltaTheta);
+    //    //event2->fY = (Int_t)(yPos + deltaPhi);
+    //    //ogl->HandleContainerMotion(event2);
+
+    //    //Event_t *event3 = new Event_t;
+    //    //event3->fType = kButtonRelease;
+    //    //event3->fX = (Int_t)(xPos + deltaTheta); //(view->GetLatitude()  + deltaPhi);
+    //    //event3->fY = (Int_t)(yPos + deltaPhi); //(view->GetLongitude() + deltaTheta);
+    //    //event3->fCode = kButton1;
+    //    //ogl->HandleContainerButton(event3);
+
+    //    //fViewThetaPreStep = view->GetLatitude();
+    //    //fViewPhiPreStep   = view->GetLongitude();
+
+    //    //delete event1;
+    //    //delete event2;
+    //    //delete event3;
+    //}
+  }
+
+  //_________________________________________________________________
+
+  void BesClient::UpdateBesInputFields()
+  {
+    fNumEntryRunNo->SetNumber(GetBesRunNo());
+    fNumEntryEventNo->SetIntNumber(GetBesEventNo());
+    fNumEntryEventPlaySpeed->SetNumber(Double_t(GetEventPlaySpeed()) / 1000.0);
+    fEventPlaySlider->SetPosition(GetBesEventNo());
+
+    fNumEntryRotateStep->SetNumber(GetRotateStep());
+    fNumEntryRotateSpeed->SetNumber(GetRotateSpeed());
+    fNumEntryRotateFPS->SetIntNumber(GetRotateFPS());
+
+    BesView *view = (BesView*)gPad->GetView();
+    if (view) {
+      fZoomRatioNumber->SetNumber(view->GetZoomRatio()*100.0);
+
+      Double_t theta = view->GetLatitude();
+      Double_t phi   = view->GetLongitude();
+      Double_t psi   = view->GetPsi();
+      SetRange(theta, 0.0, 180.0);
+      SetRange(phi,   0.0, 360.0);
+      SetRange(psi,   0.0, 360.0);
+      fViewAngleThetaNumber->SetNumber(theta);
+      fViewAnglePhiNumber->SetNumber(phi);
+      fViewAnglePsiNumber->SetNumber(psi);
+    }
+    fViewAngleThetaSlider->SetPosition((Int_t)fViewAngleThetaNumber->GetNumber());
+    fViewAnglePhiSlider->SetPosition((Int_t)fViewAnglePhiNumber->GetNumber());
+    fViewAnglePsiSlider->SetPosition((Int_t)fViewAnglePsiNumber->GetNumber());
+
+    fChkBtnAutoRotate->SetOn(fAutoRotate);
+  }
+
+  //_____________________________________________________
+
+  void BesClient::ChangeFocus() {
+    //
+    // change focus on pressed tab
+    if (gDebug) cout << "BesClient::ChangeFocus called!" << endl;
+
+    if ( gTQSender == fNumEntryRunNo->GetNumberEntry() ) {
+      fNumEntryEventNo->GetNumberEntry()->SelectAll();
+      fNumEntryEventNo->GetNumberEntry()->SetFocus();
+    }
+    else if ( gTQSender == fNumEntryEventPlaySpeed->GetNumberEntry() ) {
+      fNumEntryEventPlaySpeed->GetNumberEntry()->SelectAll();
+      fNumEntryEventPlaySpeed->GetNumberEntry()->SetFocus();
+    }
+    else if ( gTQSender == fNumEntryMagnetic->GetNumberEntry() ) {
+      fNumEntryMagnetic->GetNumberEntry()->SelectAll();
+      fNumEntryMagnetic->GetNumberEntry()->SetFocus();
+    }
+  }
+
+  //_____________________________________________________
+
+  void BesClient::ExecuteReturn() {
+    //
+    // execute if return was pressed
+    if (gDebug) cout << "BesClient::ExecuteReturn called!" << endl;
+
+    BesView *view = (BesView*)gPad->GetView();
+    //Double_t theta, phi, psi;
+    Int_t iret;
+
+    if ( gTQSender == fZoomRatioNumber ) {
+      if (view) view->SetZoomRatio(fZoomRatioNumber->GetNumber()/100.0);
     }
 
-    //_____________________________________________________
-
-    void BesClient::ChangeFocus() {
-	//
-	// change focus on pressed tab
-	if (gDebug) cout << "BesClient::ChangeFocus called!" << endl;
-
-	if ( gTQSender == fNumEntryRunNo->GetNumberEntry() ) {
-	    fNumEntryEventNo->GetNumberEntry()->SelectAll();
-	    fNumEntryEventNo->GetNumberEntry()->SetFocus();
-	}
-	else if ( gTQSender == fNumEntryEventPlaySpeed->GetNumberEntry() ) {
-	    fNumEntryEventPlaySpeed->GetNumberEntry()->SelectAll();
-	    fNumEntryEventPlaySpeed->GetNumberEntry()->SetFocus();
-	}
-	else if ( gTQSender == fNumEntryMagnetic->GetNumberEntry() ) {
-	    fNumEntryMagnetic->GetNumberEntry()->SelectAll();
-	    fNumEntryMagnetic->GetNumberEntry()->SetFocus();
-	}
+    if ( gTQSender == fNumEntryEventNo->GetNumberEntry() ) {
+      fBesEventNo = fNumEntryEventNo->GetIntNumber();
+      this->GetEvent(fBesEventNo);
     }
 
-    //_____________________________________________________
-
-    void BesClient::ExecuteReturn() {
-	//
-	// execute if return was pressed
-	if (gDebug) cout << "BesClient::ExecuteReturn called!" << endl;
-
-	BesView *view = (BesView*)gPad->GetView();
-	//Double_t theta, phi, psi;
-	Int_t iret;
-
-	if ( gTQSender == fZoomRatioNumber ) {
-	    if (view) view->SetZoomRatio(fZoomRatioNumber->GetNumber()/100.0);
-	}
-
-	if ( gTQSender == fNumEntryEventNo->GetNumberEntry() ) {
-	    fBesEventNo = fNumEntryEventNo->GetIntNumber();
-	    this->GetEvent(fBesEventNo);
-	}
-
-	else if ( gTQSender == fNumEntryEventPlaySpeed->GetNumberEntry() ) {
-	    fEventPlaySpeed = Int_t(fNumEntryEventPlaySpeed->GetNumber() * 1000);
-	    fAutoDisplayEventTimer->SetTime(fEventPlaySpeed);
-	}
-
-	else if ( gTQSender == fNumEntryRotateSpeed ) {
-	    fRotateSpeed = fNumEntryRotateSpeed->GetNumber();
-	    this->SetRotateStep();
-	    cout << "fRotateSpeed " << fRotateSpeed << " fRotateStep " << fRotateStep <<  endl;
-	    //fAutoRotateTimer->SetTime((Int_t)1000/this->GetRotateFPS());
-	}
-
-	else if ( gTQSender == fNumEntryRotateFPS->GetNumberEntry() ) {
-	    fRotateFPS = fNumEntryRotateFPS->GetIntNumber();
-	    this->SetRotateSpeed();
-	    fAutoRotateTimer->SetTime((Int_t)1000/fRotateFPS);
-	    cout << "fRotateFPS " << fRotateFPS << " fRotateStep " << fRotateStep <<  endl;
-	}
-
-	else if ( gTQSender == fNumEntryMagnetic->GetNumberEntry() ) {
-	    if (gEvent){
-		gEvent->SetMagnetic(fNumEntryMagnetic->GetNumber());
-	    }
-	}
-
-	else if ( gTQSender == fNumEntryRotateStep ) {
-	    fRotateStep = fNumEntryRotateStep->GetNumber();
-	    fRotateSpeed = fRotateStep * fRotateFPS;
-	    cout << "fRotateSpeed " << fRotateSpeed << " fRotateStep " << fRotateStep <<  endl;
-	}
-
-	else if ( gTQSender == fViewAngleThetaNumber ) {
-	    if (view) {
-		view->SetView(view->GetLongitude(), fViewAngleThetaNumber->GetNumber(), view->GetPsi(), iret);
-	    }
-	}
-
-	else if ( gTQSender == fViewAnglePhiNumber ) {
-	    if (view) {
-		view->SetView(fViewAnglePhiNumber->GetNumber(), view->GetLatitude(), view->GetPsi(), iret);
-	    }
-	}
-
-	else if ( gTQSender == fViewAnglePsiNumber ) {
-	    if (view && view->GetViewType() == k3DView) {
-		view->SetView(view->GetLongitude(), view->GetLatitude(), fViewAnglePsiNumber->GetNumber(), iret);
-	    }
-	}
-
-	fEmbeddedCanvas->RequestFocus();  // RequestFocus to let Hot Key "QWEASD.." work in ExecuteEvent, or it doesnt work after input
-	UpdateCurrentPad();
-	UpdateBesInputFields();
+    else if ( gTQSender == fNumEntryEventPlaySpeed->GetNumberEntry() ) {
+      fEventPlaySpeed = Int_t(fNumEntryEventPlaySpeed->GetNumber() * 1000);
+      fAutoDisplayEventTimer->SetTime(fEventPlaySpeed);
     }
 
-    Pixmap_t BesClient::GetPic(const char *file)
-    {
-	TString filePath = fBesVisPath;
-	filePath += "/icons/";
-	filePath += file;
-
-	TASImage asImage(filePath);
-	Pixmap_t pic = asImage.GetPixmap();
-	//asImage->Draw();
-	return pic;
+    else if ( gTQSender == fNumEntryRotateSpeed ) {
+      fRotateSpeed = fNumEntryRotateSpeed->GetNumber();
+      this->SetRotateStep();
+      cout << "fRotateSpeed " << fRotateSpeed << " fRotateStep " << fRotateStep <<  endl;
+      //fAutoRotateTimer->SetTime((Int_t)1000/this->GetRotateFPS());
     }
 
-    Bool_t BesClient::FileExists(TString fname)
-    {
-	// gSystem return 0 if exist, 1 for not exist
-	return (!gSystem->AccessPathName(fname, kFileExists));
+    else if ( gTQSender == fNumEntryRotateFPS->GetNumberEntry() ) {
+      fRotateFPS = fNumEntryRotateFPS->GetIntNumber();
+      this->SetRotateSpeed();
+      fAutoRotateTimer->SetTime((Int_t)1000/fRotateFPS);
+      cout << "fRotateFPS " << fRotateFPS << " fRotateStep " << fRotateStep <<  endl;
     }
 
-    // makes min <= input < max
-    void BesClient::SetRange(Double_t &input, Double_t min, Double_t max)
-    {
-	Double_t range = max - min;
-	if (input < min) {
-	    do {
-		input += range;
-	    }
-	    while (input < min);
-	}
-
-	if (input >= max) {
-	    do {
-		input -= range;
-	    }
-	    while (input >= max);
-	}
+    else if ( gTQSender == fNumEntryMagnetic->GetNumberEntry() ) {
+      if (gEvent){
+	gEvent->SetMagnetic(fNumEntryMagnetic->GetNumber());
+      }
     }
+
+    else if ( gTQSender == fNumEntryRotateStep ) {
+      fRotateStep = fNumEntryRotateStep->GetNumber();
+      fRotateSpeed = fRotateStep * fRotateFPS;
+      cout << "fRotateSpeed " << fRotateSpeed << " fRotateStep " << fRotateStep <<  endl;
+    }
+
+    else if ( gTQSender == fViewAngleThetaNumber ) {
+      if (view) {
+	view->SetView(view->GetLongitude(), fViewAngleThetaNumber->GetNumber(), view->GetPsi(), iret);
+      }
+    }
+
+    else if ( gTQSender == fViewAnglePhiNumber ) {
+      if (view) {
+	view->SetView(fViewAnglePhiNumber->GetNumber(), view->GetLatitude(), view->GetPsi(), iret);
+      }
+    }
+
+    else if ( gTQSender == fViewAnglePsiNumber ) {
+      if (view && view->GetViewType() == k3DView) {
+	view->SetView(view->GetLongitude(), view->GetLatitude(), fViewAnglePsiNumber->GetNumber(), iret);
+      }
+    }
+
+    fEmbeddedCanvas->RequestFocus();  // RequestFocus to let Hot Key "QWEASD.." work in ExecuteEvent, or it doesnt work after input
+    UpdateCurrentPad();
+    UpdateBesInputFields();
+  }
+
+  Pixmap_t BesClient::GetPic(const char *file)
+  {
+    TString filePath = fBesVisPath;
+    filePath += "/icons/";
+    filePath += file;
+
+    TASImage asImage(filePath);
+    Pixmap_t pic = asImage.GetPixmap();
+    //asImage->Draw();
+    return pic;
+  }
+
+  Bool_t BesClient::FileExists(TString fname)
+  {
+    // gSystem return 0 if exist, 1 for not exist
+    return (!gSystem->AccessPathName(fname, kFileExists));
+  }
+
+  // makes min <= input < max
+  void BesClient::SetRange(Double_t &input, Double_t min, Double_t max)
+  {
+    Double_t range = max - min;
+    if (input < min) {
+      do {
+	input += range;
+      }
+      while (input < min);
+    }
+
+    if (input >= max) {
+      do {
+	input -= range;
+      }
+      while (input >= max);
+    }
+  }
